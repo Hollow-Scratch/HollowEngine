@@ -1,0 +1,15 @@
+include_guard(GLOBAL)
+
+function(axiom_set_compiler_warnings TARGET)
+    if(NOT TARGET "${TARGET}")
+        message(FATAL_ERROR "axiom_set_compiler_warnings: target '${TARGET}' does not exist")
+    endif()
+
+    if(MSVC)
+        target_compile_options("${TARGET}" PRIVATE /W4)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options("${TARGET}" PRIVATE -Wall -Wextra -Wpedantic)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options("${TARGET}" PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endfunction()
