@@ -2,118 +2,118 @@
 setlocal
 
 echo ==========================
-echo 1. Build Debug [MSVC]
-echo 2. Build Release [MSVC]
-echo 3. Build and Run Debug [MSVC]
-echo 4. Build and Run Release [MSVC]
-echo 5. Clean Debug
-echo 6. Clean Release
-echo 7. Clean All
-echo 8. Build Debug [Clang]
-echo 9. Build Release [Clang]
-echo 10. Build and Run Debug [Clang]
-echo 11. Build and Run Release [Clang]
+echo MSVC
+echo 1.  Build Debug
+echo 2.  Build Release
+echo 3.  Build and Run Debug
+echo 4.  Build and Run Release
+echo.
+echo CLANG
+echo 5.  Build Debug
+echo 6.  Build Release
+echo 7.  Build and Run Debug
+echo 8.  Build and Run Release
+echo.
+echo CLEAN
+echo 9.  Clean Debug
+echo 10. Clean Release
+echo 11. Clean All
 echo ==========================
 
 set /p choice=Choose option: 
 
-set RUN_AFTER_BUILD=0
-set COMPILER_C=cl
-set COMPILER_CXX=cl
+set "RUN_AFTER_BUILD=0"
+set "CONFIG="
+set "BUILD_DIR="
+set "COMPILER_C=cl"
+set "COMPILER_CXX=cl"
 
-if "%choice%"=="1" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug
-    set COMPILER_C=cl
-    set COMPILER_CXX=cl
-    goto build
-)
-
-if "%choice%"=="2" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release
-    set COMPILER_C=cl
-    set COMPILER_CXX=cl
-    goto build
-)
-
-if "%choice%"=="3" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug
-    set COMPILER_C=cl
-    set COMPILER_CXX=cl
-    set RUN_AFTER_BUILD=1
-    goto build
-)
-
-if "%choice%"=="4" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release
-    set COMPILER_C=cl
-    set COMPILER_CXX=cl
-    set RUN_AFTER_BUILD=1
-    goto build
-)
-
-if "%choice%"=="5" (
-    echo Cleaning Debug...
-    rmdir /s /q build\debug 2>nul
-    rmdir /s /q build\debug-clang 2>nul
-    echo Done.
-    exit /b 0
-)
-
-if "%choice%"=="6" (
-    echo Cleaning Release...
-    rmdir /s /q build\release 2>nul
-    rmdir /s /q build\release-clang 2>nul
-    echo Done.
-    exit /b 0
-)
-
-if "%choice%"=="7" (
-    echo Cleaning All...
-    rmdir /s /q build 2>nul
-    echo Done.
-    exit /b 0
-)
-
-if "%choice%"=="8" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug-clang
-    set COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe
-    set COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe
-    goto build
-)
-
-if "%choice%"=="9" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release-clang
-    set COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe
-    set COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe
-    goto build
-)
-
-if "%choice%"=="10" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug-clang
-    set COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe
-    set COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe
-    set RUN_AFTER_BUILD=1
-    goto build
-)
-
-if "%choice%"=="11" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release-clang
-    set COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe
-    set COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe
-    set RUN_AFTER_BUILD=1
-    goto build
-)
+if "%choice%"=="1"  goto msvc_debug
+if "%choice%"=="2"  goto msvc_release
+if "%choice%"=="3"  goto msvc_debug_run
+if "%choice%"=="4"  goto msvc_release_run
+if "%choice%"=="5"  goto clang_debug
+if "%choice%"=="6"  goto clang_release
+if "%choice%"=="7"  goto clang_debug_run
+if "%choice%"=="8"  goto clang_release_run
+if "%choice%"=="9"  goto clean_debug
+if "%choice%"=="10" goto clean_release
+if "%choice%"=="11" goto clean_all
 
 echo Invalid choice.
 exit /b 1
+
+:msvc_debug
+set "CONFIG=Debug"
+set "BUILD_DIR=build\debug"
+goto build
+
+:msvc_release
+set "CONFIG=Release"
+set "BUILD_DIR=build\release"
+goto build
+
+:msvc_debug_run
+set "CONFIG=Debug"
+set "BUILD_DIR=build\debug"
+set "RUN_AFTER_BUILD=1"
+goto build
+
+:msvc_release_run
+set "CONFIG=Release"
+set "BUILD_DIR=build\release"
+set "RUN_AFTER_BUILD=1"
+goto build
+
+:clang_debug
+set "CONFIG=Debug"
+set "BUILD_DIR=build\debug-clang"
+set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
+goto build
+
+:clang_release
+set "CONFIG=Release"
+set "BUILD_DIR=build\release-clang"
+set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
+goto build
+
+:clang_debug_run
+set "CONFIG=Debug"
+set "BUILD_DIR=build\debug-clang"
+set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "RUN_AFTER_BUILD=1"
+goto build
+
+:clang_release_run
+set "CONFIG=Release"
+set "BUILD_DIR=build\release-clang"
+set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
+set "RUN_AFTER_BUILD=1"
+goto build
+
+:clean_debug
+echo Cleaning Debug...
+rmdir /s /q build\debug 2>nul
+rmdir /s /q build\debug-clang 2>nul
+echo Done.
+exit /b 0
+
+:clean_release
+echo Cleaning Release...
+rmdir /s /q build\release 2>nul
+rmdir /s /q build\release-clang 2>nul
+echo Done.
+exit /b 0
+
+:clean_all
+echo Cleaning All...
+rmdir /s /q build 2>nul
+echo Done.
+exit /b 0
 
 :build
 rem Remove MSYS tools so native Windows CMake/Ninja/MSVC tools win
