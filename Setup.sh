@@ -1,72 +1,84 @@
-#!/usr/bin/env bash
+@echo off
+setlocal
 
-echo "=========================="
-echo "1. Build Debug"
-echo "2. Build Release"
-echo "3. Build and Run Debug"
-echo "4. Build and Run Release"
-echo "5. Clean Debug"
-echo "6. Clean Release"
-echo "7. Clean All"
-echo "=========================="
+echo ==========================
+echo 1. Build Debug
+echo 2. Build Release
+echo 3. Build and Run Debug
+echo 4. Build and Run Release
+echo 5. Clean Debug
+echo 6. Clean Release
+echo 7. Clean All
+echo ==========================
 
-read -p "Choose option: " choice
+set /p choice=Choose option: 
 
-RUN_AFTER_BUILD=0
+set RUN_AFTER_BUILD=0
 
-if [ "$choice" = "1" ]; then
-  CONFIG="Debug"
-  BUILD_DIR="build/debug"
+if "%choice%"=="1" (
+    set CONFIG=Debug
+    set BUILD_DIR=build\debug
+    goto build
+)
 
-elif [ "$choice" = "2" ]; then
-  CONFIG="Release"
-  BUILD_DIR="build/release"
+if "%choice%"=="2" (
+    set CONFIG=Release
+    set BUILD_DIR=build\release
+    goto build
+)
 
-elif [ "$choice" = "3" ]; then
-  CONFIG="Debug"
-  BUILD_DIR="build/debug"
-  RUN_AFTER_BUILD=1
+if "%choice%"=="3" (
+    set CONFIG=Debug
+    set BUILD_DIR=build\debug
+    set RUN_AFTER_BUILD=1
+    goto build
+)
 
-elif [ "$choice" = "4" ]; then
-  CONFIG="Release"
-  BUILD_DIR="build/release"
-  RUN_AFTER_BUILD=1
+if "%choice%"=="4" (
+    set CONFIG=Release
+    set BUILD_DIR=build\release
+    set RUN_AFTER_BUILD=1
+    goto build
+)
 
-elif [ "$choice" = "5" ]; then
-  echo "Cleaning Debug..."
-  rm -rf build/debug
-  echo "Done."
-  exit 0
+if "%choice%"=="5" (
+    echo Cleaning Debug...
+    rmdir /s /q build\debug
+    echo Done.
+    exit /b 0
+)
 
-elif [ "$choice" = "6" ]; then
-  echo "Cleaning Release..."
-  rm -rf build/release
-  echo "Done."
-  exit 0
+if "%choice%"=="6" (
+    echo Cleaning Release...
+    rmdir /s /q build\release
+    echo Done.
+    exit /b 0
+)
 
-elif [ "$choice" = "7" ]; then
-  echo "Cleaning All..."
-  rm -rf build
-  echo "Done."
-  exit 0
+if "%choice%"=="7" (
+    echo Cleaning All...
+    rmdir /s /q build
+    echo Done.
+    exit /b 0
+)
 
-else
-  echo "Invalid choice."
-  exit 1
-fi
+echo Invalid choice.
+exit /b 1
 
-# Configure (Ninja)
-cmake -S . -B "$BUILD_DIR" \
-  -G Ninja \
-  -DCMAKE_BUILD_TYPE="$CONFIG" || exit 1
+:build
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+if errorlevel 1 exit /b %errorlevel%
 
-# Build
-cmake --build "$BUILD_DIR" || exit 1
+cmake -S . -B "%BUILD_DIR%" -G Ninja -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+if errorlevel 1 exit /b %errorlevel%
 
-# Run (if selected)
-if [ "$RUN_AFTER_BUILD" = "1" ]; then
-  echo "Running..."
-  "$BUILD_DIR/src/Game"
-fi
+cmake --build "%BUILD_DIR%"
+if errorlevel 1 exit /b %errorlevel%
 
-echo "Done."
+if "%RUN_AFTER_BUILD%"=="1" (
+    echo Running...
+    "%BUILD_DIR%\src\Game.exe"
+)
+
+echo Done.
+exit /b 0

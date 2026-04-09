@@ -19,13 +19,24 @@ endfunction()
 axiom_option(AXIOM_ENABLE_ASSERTS ON  "Enable engine assertions")
 axiom_option(AXIOM_ENABLE_LOGGING ON  "Enable engine logging")
 
+# Sanitizer defaults
+set(AXIOM_DEFAULT_ASAN ON)
+set(AXIOM_DEFAULT_UBSAN ON)
+set(AXIOM_DEFAULT_TSAN OFF)
+
+# Disable sanitizer defaults for GCC on Windows
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(AXIOM_DEFAULT_ASAN OFF)
+    set(AXIOM_DEFAULT_UBSAN OFF)
+endif()
+
 # Sanitizers
-axiom_option(AXIOM_ENABLE_ASAN  ON  "Enable AddressSanitizer")
-axiom_option(AXIOM_ENABLE_UBSAN ON  "Enable UndefinedBehaviorSanitizer")
-axiom_option(AXIOM_ENABLE_TSAN  OFF "Enable ThreadSanitizer")
+axiom_option(AXIOM_ENABLE_ASAN  ${AXIOM_DEFAULT_ASAN}  "Enable AddressSanitizer")
+axiom_option(AXIOM_ENABLE_UBSAN ${AXIOM_DEFAULT_UBSAN} "Enable UndefinedBehaviorSanitizer")
+axiom_option(AXIOM_ENABLE_TSAN  ${AXIOM_DEFAULT_TSAN}  "Enable ThreadSanitizer")
 
 # Tooling
-axiom_option(AXIOM_ENABLE_TRACY       OFF  "Enable Tracy profiler")
+axiom_option(AXIOM_ENABLE_TRACY       OFF "Enable Tracy profiler")
 axiom_option(AXIOM_ENABLE_LTO         OFF "Enable link-time optimization")
 axiom_option(AXIOM_WARNINGS_AS_ERRORS ON  "Treat warnings as errors")
 
@@ -110,12 +121,22 @@ function(axiom_configure_target TARGET)
 
     # Sanitizers
     if(AXIOM_ENABLE_ASAN OR AXIOM_ENABLE_UBSAN OR AXIOM_ENABLE_TSAN)
-        if(MSVC)
-            message(WARNING
-                "Sanitizers requested for target '${TARGET}', "
-                "but this project only enables sanitizer flags on Clang/GCC-style toolchains."
-            )
-        else()
+        if(AXIOM_ENABLE_ASAN AND AXIOM_ENABLE_TSAN)
+            message(FATAL_ERROR "ASAN and TSAN cannot be enabled together")
+        endif()
+
+        set(AXIOM_SANITIZERS_SUPPORTED FALSE)
+
+        # Supported cases:
+        # - Clang on any platform
+        # - GCC on non-Windows platforms
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            set(AXIOM_SANITIZERS_SUPPORTED TRUE)
+        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT WIN32)
+            set(AXIOM_SANITIZERS_SUPPORTED TRUE)
+        endif()
+
+        if(AXIOM_SANITIZERS_SUPPORTED)
             set(SAN_FLAGS "")
 
             if(AXIOM_ENABLE_ASAN)
@@ -130,15 +151,17 @@ function(axiom_configure_target TARGET)
                 list(APPEND SAN_FLAGS thread)
             endif()
 
-            if(AXIOM_ENABLE_ASAN AND AXIOM_ENABLE_TSAN)
-                message(FATAL_ERROR "ASAN and TSAN cannot be enabled together")
-            endif()
-
             if(SAN_FLAGS)
                 list(JOIN SAN_FLAGS "," SAN_FLAGS_STR)
                 target_compile_options(${TARGET} PRIVATE -fsanitize=${SAN_FLAGS_STR})
                 target_link_options(${TARGET} PRIVATE -fsanitize=${SAN_FLAGS_STR})
             endif()
+        else()
+            message(STATUS
+                "Sanitizers requested for target '${TARGET}', but they are disabled for "
+                "${CMAKE_CXX_COMPILER_ID} on ${CMAKE_SYSTEM_NAME}. "
+                "Use Clang on Windows if you want sanitizer support."
+            )
         endif()
     endif()
 

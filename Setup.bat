@@ -66,10 +66,13 @@ echo Invalid choice.
 exit /b 1
 
 :build
-cmake -S . -B %BUILD_DIR% -G Ninja -DCMAKE_BUILD_TYPE=%CONFIG%
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 if errorlevel 1 exit /b %errorlevel%
 
-cmake --build %BUILD_DIR%
+cmake -S . -B %BUILD_DIR% -G Ninja -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+if errorlevel 1 exit /b %errorlevel%
+
+cmake --build %BUILD_DIR% --parallel
 if errorlevel 1 exit /b %errorlevel%
 
 if "%RUN_AFTER_BUILD%"=="1" (
