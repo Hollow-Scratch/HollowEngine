@@ -1,84 +1,123 @@
-@echo off
-setlocal
+#!/usr/bin/env bash
 
-echo ==========================
-echo 1. Build Debug
-echo 2. Build Release
-echo 3. Build and Run Debug
-echo 4. Build and Run Release
-echo 5. Clean Debug
-echo 6. Clean Release
-echo 7. Clean All
-echo ==========================
+echo "=========================="
+echo "GCC"
+echo "1.  Build Debug"
+echo "2.  Build Release"
+echo "3.  Build and Run Debug"
+echo "4.  Build and Run Release"
+echo
+echo "CLANG"
+echo "5.  Build Debug"
+echo "6.  Build Release"
+echo "7.  Build and Run Debug"
+echo "8.  Build and Run Release"
+echo
+echo "CLEAN"
+echo "9.  Clean Debug"
+echo "10. Clean Release"
+echo "11. Clean All"
+echo "=========================="
 
-set /p choice=Choose option: 
+read -p "Choose option: " choice
 
-set RUN_AFTER_BUILD=0
+RUN_AFTER_BUILD=0
+CONFIG=""
+BUILD_DIR=""
+COMPILER_C="gcc"
+COMPILER_CXX="g++"
 
-if "%choice%"=="1" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug
-    goto build
-)
+case "$choice" in
+  1)
+    CONFIG="Debug"
+    BUILD_DIR="build/debug"
+    ;;
 
-if "%choice%"=="2" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release
-    goto build
-)
+  2)
+    CONFIG="Release"
+    BUILD_DIR="build/release"
+    ;;
 
-if "%choice%"=="3" (
-    set CONFIG=Debug
-    set BUILD_DIR=build\debug
-    set RUN_AFTER_BUILD=1
-    goto build
-)
+  3)
+    CONFIG="Debug"
+    BUILD_DIR="build/debug"
+    RUN_AFTER_BUILD=1
+    ;;
 
-if "%choice%"=="4" (
-    set CONFIG=Release
-    set BUILD_DIR=build\release
-    set RUN_AFTER_BUILD=1
-    goto build
-)
+  4)
+    CONFIG="Release"
+    BUILD_DIR="build/release"
+    RUN_AFTER_BUILD=1
+    ;;
 
-if "%choice%"=="5" (
-    echo Cleaning Debug...
-    rmdir /s /q build\debug
-    echo Done.
-    exit /b 0
-)
+  5)
+    CONFIG="Debug"
+    BUILD_DIR="build/debug-clang"
+    COMPILER_C="clang"
+    COMPILER_CXX="clang++"
+    ;;
 
-if "%choice%"=="6" (
-    echo Cleaning Release...
-    rmdir /s /q build\release
-    echo Done.
-    exit /b 0
-)
+  6)
+    CONFIG="Release"
+    BUILD_DIR="build/release-clang"
+    COMPILER_C="clang"
+    COMPILER_CXX="clang++"
+    ;;
 
-if "%choice%"=="7" (
-    echo Cleaning All...
-    rmdir /s /q build
-    echo Done.
-    exit /b 0
-)
+  7)
+    CONFIG="Debug"
+    BUILD_DIR="build/debug-clang"
+    COMPILER_C="clang"
+    COMPILER_CXX="clang++"
+    RUN_AFTER_BUILD=1
+    ;;
 
-echo Invalid choice.
-exit /b 1
+  8)
+    CONFIG="Release"
+    BUILD_DIR="build/release-clang"
+    COMPILER_C="clang"
+    COMPILER_CXX="clang++"
+    RUN_AFTER_BUILD=1
+    ;;
 
-:build
-call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-if errorlevel 1 exit /b %errorlevel%
+  9)
+    echo "Cleaning Debug..."
+    rm -rf build/debug build/debug-clang
+    echo "Done."
+    exit 0
+    ;;
 
-cmake -S . -B "%BUILD_DIR%" -G Ninja -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
-if errorlevel 1 exit /b %errorlevel%
+  10)
+    echo "Cleaning Release..."
+    rm -rf build/release build/release-clang
+    echo "Done."
+    exit 0
+    ;;
 
-cmake --build "%BUILD_DIR%"
-if errorlevel 1 exit /b %errorlevel%
+  11)
+    echo "Cleaning All..."
+    rm -rf build
+    echo "Done."
+    exit 0
+    ;;
 
-if "%RUN_AFTER_BUILD%"=="1" (
-    echo Running...
-    "%BUILD_DIR%\src\Game.exe"
-)
+  *)
+    echo "Invalid choice."
+    exit 1
+    ;;
+esac
 
-echo Done.
-exit /b 0
+cmake -S . -B "$BUILD_DIR" \
+  -G Ninja \
+  -DCMAKE_BUILD_TYPE="$CONFIG" \
+  -DCMAKE_C_COMPILER="$COMPILER_C" \
+  -DCMAKE_CXX_COMPILER="$COMPILER_CXX" || exit 1
+
+cmake --build "$BUILD_DIR" --parallel || exit 1
+
+if [ "$RUN_AFTER_BUILD" = "1" ]; then
+  echo "Running..."
+  "$BUILD_DIR/src/Game"
+fi
+
+echo "Done."
