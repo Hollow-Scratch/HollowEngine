@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(procedural_planet LANGUAGES C CXX)
+project(AXIOMENGINE LANGUAGES C CXX)
 
 # Options
 function(axiom_option NAME DEFAULT DESCRIPTION)
@@ -40,7 +40,7 @@ axiom_option(AXIOM_ENABLE_TSAN  ${AXIOM_DEFAULT_TSAN}  "Enable ThreadSanitizer")
 
 # Tooling
 axiom_option(AXIOM_ENABLE_TRACY       OFF "Enable Tracy profiler")
-axiom_option(AXIOM_ENABLE_LTO         OFF "Enable link-time optimization")
+axiom_option(AXIOM_ENABLE_LTO         ON "Enable link-time optimization")
 axiom_option(AXIOM_WARNINGS_AS_ERRORS ON  "Treat warnings as errors")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
