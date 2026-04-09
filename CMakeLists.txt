@@ -24,10 +24,13 @@ set(AXIOM_DEFAULT_ASAN ON)
 set(AXIOM_DEFAULT_UBSAN ON)
 set(AXIOM_DEFAULT_TSAN OFF)
 
-# Disable sanitizer defaults for GCC on Windows
-if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# Disable sanitizer defaults on Windows
+# clang-cl on Windows is currently problematic in this setup,
+# and GCC on Windows is also disabled.
+if(WIN32)
     set(AXIOM_DEFAULT_ASAN OFF)
     set(AXIOM_DEFAULT_UBSAN OFF)
+    set(AXIOM_DEFAULT_TSAN OFF)
 endif()
 
 # Sanitizers
@@ -128,9 +131,9 @@ function(axiom_configure_target TARGET)
         set(AXIOM_SANITIZERS_SUPPORTED FALSE)
 
         # Supported cases:
-        # - Clang on any platform
+        # - Clang on non-Windows platforms
         # - GCC on non-Windows platforms
-        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT WIN32)
             set(AXIOM_SANITIZERS_SUPPORTED TRUE)
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT WIN32)
             set(AXIOM_SANITIZERS_SUPPORTED TRUE)
@@ -159,8 +162,7 @@ function(axiom_configure_target TARGET)
         else()
             message(STATUS
                 "Sanitizers requested for target '${TARGET}', but they are disabled for "
-                "${CMAKE_CXX_COMPILER_ID} on ${CMAKE_SYSTEM_NAME}. "
-                "Use Clang on Windows if you want sanitizer support."
+                "${CMAKE_CXX_COMPILER_ID} on ${CMAKE_SYSTEM_NAME}."
             )
         endif()
     endif()
