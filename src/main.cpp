@@ -1,6 +1,7 @@
-#include <iostream>
+#include "Core/Application.hpp"
 
 int main() {
-    std::cout << "Hello, Axiom Engine!" << std::endl;
+    Axiom::Application app;
+    app.run();
     return 0;
 }
