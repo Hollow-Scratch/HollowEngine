@@ -65,8 +65,10 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/glfw)
 
-#add_subdirectory(external/glad/cmake)
-#glad_add_library(glad REPRODUCIBLE API gl:core=4.6)
+add_library(glad STATIC external/glad/src/glad.c)
+target_include_directories(glad PUBLIC
+    ${PROJECT_SOURCE_DIR}/external/glad/include
+)
 
 #set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 #set(ASSIMP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)

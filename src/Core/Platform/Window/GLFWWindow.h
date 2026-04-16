@@ -2,9 +2,9 @@
 
 #include "Core/Window.h"
 
-#include <GLFW/glfw3.h>
-
 #include <string>
+
+struct GLFWwindow;
 
 namespace Axiom
 {

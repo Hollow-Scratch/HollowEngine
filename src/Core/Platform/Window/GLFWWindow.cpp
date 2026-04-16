@@ -1,5 +1,9 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include "Platform/Window/GLFWWindow.h"
 
+#include <iostream>
 #include <stdexcept>
 
 namespace
@@ -32,6 +36,10 @@ namespace Axiom
             throw std::runtime_error("Failed to initialize GLFW.");
         }
 
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
         m_Window = glfwCreateWindow(
             static_cast<int>(m_Data.Width),
             static_cast<int>(m_Data.Height),
@@ -50,9 +58,24 @@ namespace Axiom
             throw std::runtime_error("Failed to create GLFW window.");
         }
 
+        glfwMakeContextCurrent(m_Window);
+
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            std::cerr << "Failed to initialize GLAD." << std::endl;
+            glfwDestroyWindow(m_Window);
+            m_Window = nullptr;
+
+            if (shouldTerminateOnFailure)
+            {
+                glfwTerminate();
+            }
+
+            throw std::runtime_error("Failed to initialize GLAD.");
+        }
+
         ++s_GLFWWindowCount;
 
-        glfwMakeContextCurrent(m_Window);
         glfwSetWindowUserPointer(m_Window, &m_Data);
         glfwSetWindowSizeCallback(m_Window, GLFWWindow::WindowSizeCallback);
         glfwSetWindowCloseCallback(m_Window, GLFWWindow::WindowCloseCallback);
