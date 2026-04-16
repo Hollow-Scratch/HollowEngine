@@ -1,5 +1,5 @@
 #include "Core/Application.hpp"
-#include <iostream>
+#include "Core/Time.hpp"
 
 namespace Axiom
 {
@@ -10,10 +10,17 @@ namespace Axiom
 
     void Application::run()
     {
+        OnInit();
+
+        Time::Reset();
+
         while (m_isRunning && !m_Window->ShouldClose())
         {
-            std::cout << "Running Axiom Engine..." << std::endl;
+            Time::Update();
+            OnUpdate(Time::GetDeltaTime());
             m_Window->OnUpdate();
         }
+
+        OnShutdown();
     }
 }

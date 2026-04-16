@@ -1,5 +1,5 @@
-#include "MainWindow.h"
-#include "SceneView.h"
+#include "MainWindow.hpp"
+#include "SceneView.hpp"
 
 #include <QDockWidget>
 #include <QListWidget>

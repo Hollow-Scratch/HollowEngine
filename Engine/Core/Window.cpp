@@ -1,5 +1,5 @@
-#include "Window.h"
-#include "Platform/Window/GLFWWindow.h"
+#include "Window.hpp"
+#include "Platform/Window/GLFWWindow.hpp"
 
 namespace Axiom
 {

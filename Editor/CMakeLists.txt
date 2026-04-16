@@ -7,9 +7,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
 add_executable(Editor
     main.cpp
     MainWindow.cpp
-    MainWindow.h
+    MainWindow.hpp
     SceneView.cpp
-    SceneView.h
+    SceneView.hpp
 )
 
 target_link_libraries(Editor
