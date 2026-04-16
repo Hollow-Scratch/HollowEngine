@@ -59,7 +59,11 @@ endif()
 # Dependencies
 message(STATUS "---- Dependencies ----")
 
-#add_subdirectory(external/glfw)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/glfw)
 
 #add_subdirectory(external/glad/cmake)
 #glad_add_library(glad REPRODUCIBLE API gl:core=4.6)

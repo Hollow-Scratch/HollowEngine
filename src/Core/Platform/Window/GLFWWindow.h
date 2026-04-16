@@ -2,16 +2,17 @@
 
 #include "Core/Window.h"
 
-#include <Windows.h>
+#include <GLFW/glfw3.h>
+
 #include <string>
 
 namespace Axiom
 {
-    class Win32Window : public Window
+    class GLFWWindow : public Window
     {
     public:
-        explicit Win32Window(const WindowProps& props);
-        ~Win32Window() override;
+        explicit GLFWWindow(const WindowProps& props);
+        ~GLFWWindow() override;
 
         void OnUpdate() override;
 
@@ -30,7 +31,8 @@ namespace Axiom
         void Init(const WindowProps& props);
         void Shutdown();
 
-        static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        static void WindowSizeCallback(GLFWwindow* window, int width, int height);
+        static void WindowCloseCallback(GLFWwindow* window);
 
     private:
         struct WindowData
@@ -39,13 +41,12 @@ namespace Axiom
             std::uint32_t Width = 0;
             std::uint32_t Height = 0;
             bool VSync = false;
+            bool ShouldClose = false;
             EventCallbackFn EventCallback;
         };
 
     private:
-        HINSTANCE m_Instance = nullptr;
-        HWND m_WindowHandle = nullptr;
+        GLFWwindow* m_Window = nullptr;
         WindowData m_Data{};
-        bool m_ShouldClose = false;
     };
 }
