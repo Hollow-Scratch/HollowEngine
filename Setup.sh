@@ -68,12 +68,12 @@ cmake --build "$BUILD_DIR" --parallel || exit 1
 
 if [ "$RUN_GAME" = "1" ]; then
   echo "Running Game..."
-  "$BUILD_DIR/Sandbox" || echo "Game not found"
+  "$BUILD_DIR/Sandbox/Sandbox" || echo "Game not found"
 fi
 
 if [ "$RUN_EDITOR" = "1" ]; then
   echo "Running Editor..."
-  "$BUILD_DIR/Editor" || echo "Editor not found"
+  "$BUILD_DIR/Editor/Editor" || echo "Editor not found"
 fi
 
 echo "Done."

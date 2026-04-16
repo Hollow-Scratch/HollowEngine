@@ -106,12 +106,12 @@ if errorlevel 1 exit /b 1
 REM Run
 if "%RUN_GAME%"=="1" (
     echo Running Game...
-    "%BUILD_DIR%\Sandbox.exe"
+    "%BUILD_DIR%\Sandbox\Sandbox.exe"
 )
 
 if "%RUN_EDITOR%"=="1" (
     echo Running Editor...
-    "%BUILD_DIR%\Editor.exe"
+    "%BUILD_DIR%\Editor\Editor.exe"
 )
 
 echo Done.
