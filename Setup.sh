@@ -39,7 +39,6 @@ find_exe() {
 }
 
 case "$choice" in
-# GCC
 1) CONFIG="Debug"; BUILD_DIR="build/debug-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++" ;;
 2) CONFIG="Release"; BUILD_DIR="build/release-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++" ;;
 3) CONFIG="Debug"; BUILD_DIR="build/debug-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++"; RUN_GAME=1 ;;
@@ -47,7 +46,6 @@ case "$choice" in
 5) CONFIG="Debug"; BUILD_DIR="build/debug-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++"; RUN_EDITOR=1 ;;
 6) CONFIG="Release"; BUILD_DIR="build/release-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++"; RUN_EDITOR=1 ;;
 
-# CLANG
 7) CONFIG="Debug"; BUILD_DIR="build/debug-clang"; COMPILER_C="clang"; COMPILER_CXX="clang++" ;;
 8) CONFIG="Release"; BUILD_DIR="build/release-clang"; COMPILER_C="clang"; COMPILER_CXX="clang++" ;;
 9) CONFIG="Debug"; BUILD_DIR="build/debug-clang"; COMPILER_C="clang"; COMPILER_CXX="clang++"; RUN_GAME=1 ;;
@@ -55,7 +53,6 @@ case "$choice" in
 11) CONFIG="Debug"; BUILD_DIR="build/debug-clang"; COMPILER_C="clang"; COMPILER_CXX="clang++"; RUN_EDITOR=1 ;;
 12) CONFIG="Release"; BUILD_DIR="build/release-clang"; COMPILER_C="clang"; COMPILER_CXX="clang++"; RUN_EDITOR=1 ;;
 
-# CLEAN
 13) rm -rf build/debug-*; echo "Cleaned Debug"; exit 0 ;;
 14) rm -rf build/release-*; echo "Cleaned Release"; exit 0 ;;
 15) rm -rf build; echo "Cleaned All"; exit 0 ;;
@@ -69,26 +66,25 @@ cmake -S . -B "$BUILD_DIR" \
   -DCMAKE_C_COMPILER="$COMPILER_C" \
   -DCMAKE_CXX_COMPILER="$COMPILER_CXX" || exit 1
 
-cmake --build "$BUILD_DIR" --parallel || exit 1
+# ✅ FIXED BUILD STEP
+if [ "$RUN_GAME" = "1" ]; then
+  cmake --build "$BUILD_DIR" --target Sandbox --parallel || exit 1
+elif [ "$RUN_EDITOR" = "1" ]; then
+  cmake --build "$BUILD_DIR" --target Editor --parallel || exit 1
+else
+  cmake --build "$BUILD_DIR" --parallel || exit 1
+fi
 
 if [ "$RUN_GAME" = "1" ]; then
   echo "Running Game..."
   exe=$(find_exe "Sandbox")
-  if [ -n "$exe" ]; then
-    "$exe"
-  else
-    echo "Game executable not found"
-  fi
+  [ -n "$exe" ] && "$exe" || echo "Game executable not found"
 fi
 
 if [ "$RUN_EDITOR" = "1" ]; then
   echo "Running Editor..."
   exe=$(find_exe "Editor")
-  if [ -n "$exe" ]; then
-    "$exe"
-  else
-    echo "Editor executable not found"
-  fi
+  [ -n "$exe" ] && "$exe" || echo "Editor executable not found"
 fi
 
 echo "Done."

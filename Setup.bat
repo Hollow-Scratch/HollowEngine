@@ -77,11 +77,18 @@ REM Configure
 cmake -S . -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER=%COMPILER_C% -DCMAKE_CXX_COMPILER=%COMPILER_CXX%
 if errorlevel 1 exit /b 1
 
-REM Build
-cmake --build "%BUILD_DIR%" --parallel
+REM ===== FIXED BUILD STEP =====
+if "%RUN_GAME%"=="1" (
+    cmake --build "%BUILD_DIR%" --target Sandbox --parallel
+) else if "%RUN_EDITOR%"=="1" (
+    cmake --build "%BUILD_DIR%" --target Editor --parallel
+) else (
+    cmake --build "%BUILD_DIR%" --parallel
+)
+
 if errorlevel 1 exit /b 1
 
-REM -------- FIND EXECUTABLES --------
+REM ===== FIND EXECUTABLES =====
 set GAME_EXE=
 set EDITOR_EXE=
 
@@ -97,7 +104,7 @@ for /r "%BUILD_DIR%" %%f in (Editor.exe) do (
 )
 :found_editor
 
-REM -------- RUN --------
+REM ===== RUN =====
 if "%RUN_GAME%"=="1" (
     echo Running Game...
     if defined GAME_EXE (
