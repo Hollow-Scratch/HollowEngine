@@ -83,6 +83,9 @@ target_include_directories(glad PUBLIC
 # Engine
 add_subdirectory(src)
 
+# Editor 
+add_subdirectory(Editor)
+
 # Target configuration
 include(CheckIPOSupported)
 
@@ -202,6 +205,7 @@ endfunction()
 
 # Apply target config
 axiom_configure_target(Game)
+axiom_configure_target(Editor)
 
 # If you also have Sandbox / Editor / Tests, configure them too:
 # axiom_configure_target(Sandbox)
