@@ -33,6 +33,11 @@ COMPILER_C=""
 COMPILER_CXX=""
 GENERATOR="Ninja"
 
+find_exe() {
+    local name="$1"
+    find "$BUILD_DIR" -type f -executable -name "$name" 2>/dev/null | head -n 1
+}
+
 case "$choice" in
 # GCC
 1) CONFIG="Debug"; BUILD_DIR="build/debug-gcc"; COMPILER_C="gcc"; COMPILER_CXX="g++" ;;
@@ -68,12 +73,22 @@ cmake --build "$BUILD_DIR" --parallel || exit 1
 
 if [ "$RUN_GAME" = "1" ]; then
   echo "Running Game..."
-  "$BUILD_DIR/Sandbox/Sandbox" || echo "Game not found"
+  exe=$(find_exe "Sandbox")
+  if [ -n "$exe" ]; then
+    "$exe"
+  else
+    echo "Game executable not found"
+  fi
 fi
 
 if [ "$RUN_EDITOR" = "1" ]; then
   echo "Running Editor..."
-  "$BUILD_DIR/Editor/Editor" || echo "Editor not found"
+  exe=$(find_exe "Editor")
+  if [ -n "$exe" ]; then
+    "$exe"
+  else
+    echo "Editor executable not found"
+  fi
 fi
 
 echo "Done."
