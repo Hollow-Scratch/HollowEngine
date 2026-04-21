@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 
-add_library(AxiomEngine STATIC
+add_library(AxiomEngine SHARED
 Core/Application.cpp
 Core/Window.cpp
 Core/Time.cpp
-Core/Platform/Window/GLFWWindow.cpp
+Platform/Window/GLFWWindow.cpp
 )
 
 target_include_directories(AxiomEngine PUBLIC
@@ -16,3 +16,7 @@ target_link_libraries(AxiomEngine PRIVATE
 glad
 glfw
 )
+
+target_compile_definitions(AxiomEngine PRIVATE AXIOM_ENGINE_EXPORTS)
+set_target_properties(AxiomEngine PROPERTIES POSITION_INDEPENDENT_CODE ON) # PIC
+

@@ -82,6 +82,8 @@ endif()
 target_compile_features(${TARGET} PRIVATE cxx_std_23)
 set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
 
+set_target_properties(glad PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 if(AXIOM_COMPILER_FAMILY STREQUAL "MSVC")
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:/Zi /Od>

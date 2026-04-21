@@ -3,12 +3,13 @@
 #include "Core/Window.hpp"
 
 #include <string>
+#include "Core.h"
 
 struct GLFWwindow;
 
 namespace Axiom
 {
-    class GLFWWindow : public Window
+    class AXIOM_API GLFWWindow : public Window
     {
     public:
         explicit GLFWWindow(const WindowProps& props);

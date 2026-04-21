@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
-
 #include "Core/Window.hpp"
+#include "Core.h"
 
 namespace Axiom {
-class Application {
+class AXIOM_API Application {
 public:
   Application();
   virtual ~Application() = default;

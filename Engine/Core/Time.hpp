@@ -1,8 +1,9 @@
 #pragma once
+#include "Core.h"
 
 namespace Axiom
 {
-    class Time
+    class AXIOM_API Time
     {
     public:
         static void Reset();

@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include "Core.h"
+
 namespace Axiom {
 struct WindowProps {
   std::string Title = "Game";
@@ -12,7 +14,7 @@ struct WindowProps {
   std::uint32_t Height = 720;
 };
 
-class Window {
+class AXIOM_API Window {
 public:
   using EventCallbackFn = std::function<void()>;
 
