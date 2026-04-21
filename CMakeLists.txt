@@ -91,6 +91,8 @@ function(axiom_configure_target TARGET)
         CXX_EXTENSIONS OFF
     )
 
+    
+
     # Debug info + optimization per compiler/config
     if(MSVC)
         target_compile_options(${TARGET} PRIVATE

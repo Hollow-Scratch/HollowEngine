@@ -11,3 +11,5 @@ target_include_directories(Game PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/Core
 )
+
+#target_compile_definitions(Axiom PRIVATE AXIOM_BUILD_DLL)

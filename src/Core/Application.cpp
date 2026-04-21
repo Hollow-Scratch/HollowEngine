@@ -10,10 +10,17 @@ namespace Axiom
 
     void Application::run()
     {
+        OnInit();
+
         while (m_isRunning && !m_Window->ShouldClose())
         {
-            std::cout << "Running Axiom Engine..." << std::endl;
+            // Engine tick
             m_Window->OnUpdate();
+
+            // Client update
+            OnUpdate();
         }
+
+        OnShutdown();
     }
 }
