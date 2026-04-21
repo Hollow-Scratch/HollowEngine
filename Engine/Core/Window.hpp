@@ -34,4 +34,4 @@ public:
   static std::unique_ptr<Window>
   Create(const WindowProps &props = WindowProps());
 };
-} // namespace Axiom
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PlatformDetection.h"
+#include "PlatformDetection.hpp"
 
 // Debug Break
 
