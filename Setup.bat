@@ -1,142 +1,126 @@
 @echo off
-setlocal
 
 echo ==========================
-echo MSVC
-echo 1.  Build Debug
-echo 2.  Build Release
-echo 3.  Build and Run Debug
-echo 4.  Build and Run Release
+echo GCC
+echo 1.  Build Debug (All)
+echo 2.  Build Release (All)
+echo 3.  Build + Run Debug (Game)
+echo 4.  Build + Run Release (Game)
+echo 5.  Build + Run Debug (Editor)
+echo 6.  Build + Run Release (Editor)
 echo.
 echo CLANG
-echo 5.  Build Debug
-echo 6.  Build Release
-echo 7.  Build and Run Debug
-echo 8.  Build and Run Release
+echo 7.  Build Debug (All)
+echo 8.  Build Release (All)
+echo 9.  Build + Run Debug (Game)
+echo 10. Build + Run Release (Game)
+echo 11. Build + Run Debug (Editor)
+echo 12. Build + Run Release (Editor)
 echo.
 echo CLEAN
-echo 9.  Clean Debug
-echo 10. Clean Release
-echo 11. Clean All
+echo 13. Clean Debug
+echo 14. Clean Release
+echo 15. Clean All
 echo ==========================
 
 set /p choice=Choose option: 
 
-set "RUN_AFTER_BUILD=0"
-set "CONFIG="
-set "BUILD_DIR="
-set "COMPILER_C=cl"
-set "COMPILER_CXX=cl"
+set RUN_GAME=0
+set RUN_EDITOR=0
+set CONFIG=
+set BUILD_DIR=
+set COMPILER_C=
+set COMPILER_CXX=
+set GENERATOR=Ninja
 
-if "%choice%"=="1"  goto msvc_debug
-if "%choice%"=="2"  goto msvc_release
-if "%choice%"=="3"  goto msvc_debug_run
-if "%choice%"=="4"  goto msvc_release_run
-if "%choice%"=="5"  goto clang_debug
-if "%choice%"=="6"  goto clang_release
-if "%choice%"=="7"  goto clang_debug_run
-if "%choice%"=="8"  goto clang_release_run
-if "%choice%"=="9"  goto clean_debug
-if "%choice%"=="10" goto clean_release
-if "%choice%"=="11" goto clean_all
+REM GCC
+if "%choice%"=="1"  set CONFIG=Debug& set BUILD_DIR=build\debug-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++
+if "%choice%"=="2"  set CONFIG=Release& set BUILD_DIR=build\release-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++
+if "%choice%"=="3"  set CONFIG=Debug& set BUILD_DIR=build\debug-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++& set RUN_GAME=1
+if "%choice%"=="4"  set CONFIG=Release& set BUILD_DIR=build\release-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++& set RUN_GAME=1
+if "%choice%"=="5"  set CONFIG=Debug& set BUILD_DIR=build\debug-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++& set RUN_EDITOR=1
+if "%choice%"=="6"  set CONFIG=Release& set BUILD_DIR=build\release-gcc& set COMPILER_C=gcc& set COMPILER_CXX=g++& set RUN_EDITOR=1
 
-echo Invalid choice.
-exit /b 1
+REM CLANG
+if "%choice%"=="7"  set CONFIG=Debug& set BUILD_DIR=build\debug-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++
+if "%choice%"=="8"  set CONFIG=Release& set BUILD_DIR=build\release-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++
+if "%choice%"=="9"  set CONFIG=Debug& set BUILD_DIR=build\debug-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++& set RUN_GAME=1
+if "%choice%"=="10" set CONFIG=Release& set BUILD_DIR=build\release-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++& set RUN_GAME=1
+if "%choice%"=="11" set CONFIG=Debug& set BUILD_DIR=build\debug-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++& set RUN_EDITOR=1
+if "%choice%"=="12" set CONFIG=Release& set BUILD_DIR=build\release-clang& set COMPILER_C=clang& set COMPILER_CXX=clang++& set RUN_EDITOR=1
 
-:msvc_debug
-set "CONFIG=Debug"
-set "BUILD_DIR=build\debug"
-goto build
+REM CLEAN
+if "%choice%"=="13" (
+    rmdir /s /q build\debug-* 2>nul
+    echo Cleaned Debug
+    exit /b
+)
 
-:msvc_release
-set "CONFIG=Release"
-set "BUILD_DIR=build\release"
-goto build
+if "%choice%"=="14" (
+    rmdir /s /q build\release-* 2>nul
+    echo Cleaned Release
+    exit /b
+)
 
-:msvc_debug_run
-set "CONFIG=Debug"
-set "BUILD_DIR=build\debug"
-set "RUN_AFTER_BUILD=1"
-goto build
+if "%choice%"=="15" (
+    rmdir /s /q build 2>nul
+    echo Cleaned All
+    exit /b
+)
 
-:msvc_release_run
-set "CONFIG=Release"
-set "BUILD_DIR=build\release"
-set "RUN_AFTER_BUILD=1"
-goto build
+if "%CONFIG%"=="" (
+    echo Invalid choice
+    exit /b 1
+)
 
-:clang_debug
-set "CONFIG=Debug"
-set "BUILD_DIR=build\debug-clang"
-set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
-goto build
+REM Configure
+cmake -S . -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER=%COMPILER_C% -DCMAKE_CXX_COMPILER=%COMPILER_CXX%
+if errorlevel 1 exit /b 1
 
-:clang_release
-set "CONFIG=Release"
-set "BUILD_DIR=build\release-clang"
-set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
-goto build
+REM ===== FIXED BUILD STEP =====
+if "%RUN_GAME%"=="1" (
+    cmake --build "%BUILD_DIR%" --target Sandbox --parallel
+) else if "%RUN_EDITOR%"=="1" (
+    cmake --build "%BUILD_DIR%" --target Editor --parallel
+) else (
+    cmake --build "%BUILD_DIR%" --parallel
+)
 
-:clang_debug_run
-set "CONFIG=Debug"
-set "BUILD_DIR=build\debug-clang"
-set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "RUN_AFTER_BUILD=1"
-goto build
+if errorlevel 1 exit /b 1
 
-:clang_release_run
-set "CONFIG=Release"
-set "BUILD_DIR=build\release-clang"
-set "COMPILER_C=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "COMPILER_CXX=C:\Program Files\LLVM\bin\clang-cl.exe"
-set "RUN_AFTER_BUILD=1"
-goto build
+REM ===== FIND EXECUTABLES =====
+set GAME_EXE=
+set EDITOR_EXE=
 
-:clean_debug
-echo Cleaning Debug...
-rmdir /s /q build\debug 2>nul
-rmdir /s /q build\debug-clang 2>nul
-echo Done.
-exit /b 0
+for /r "%BUILD_DIR%" %%f in (Sandbox.exe) do (
+    set GAME_EXE=%%f
+    goto :found_game
+)
+:found_game
 
-:clean_release
-echo Cleaning Release...
-rmdir /s /q build\release 2>nul
-rmdir /s /q build\release-clang 2>nul
-echo Done.
-exit /b 0
+for /r "%BUILD_DIR%" %%f in (Editor.exe) do (
+    set EDITOR_EXE=%%f
+    goto :found_editor
+)
+:found_editor
 
-:clean_all
-echo Cleaning All...
-rmdir /s /q build 2>nul
-echo Done.
-exit /b 0
+REM ===== RUN =====
+if "%RUN_GAME%"=="1" (
+    echo Running Game...
+    if defined GAME_EXE (
+        "%GAME_EXE%"
+    ) else (
+        echo Game executable not found
+    )
+)
 
-:build
-rem Remove MSYS tools so native Windows CMake/Ninja/MSVC tools win
-set "PATH=%PATH:C:\msys64\ucrt64\bin;=%"
-set "PATH=%PATH:C:\msys64\usr\bin;=%"
-
-rem Load MSVC environment
-call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-if errorlevel 1 exit /b %errorlevel%
-
-rem Prefer native Windows CMake + Ninja
-set "PATH=C:\Program Files\CMake\bin;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%"
-
-cmake -S . -B "%BUILD_DIR%" -G Ninja -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_C_COMPILER="%COMPILER_C%" -DCMAKE_CXX_COMPILER="%COMPILER_CXX%"
-if errorlevel 1 exit /b %errorlevel%
-
-cmake --build "%BUILD_DIR%" --parallel
-if errorlevel 1 exit /b %errorlevel%
-
-if "%RUN_AFTER_BUILD%"=="1" (
-    echo Running...
-    "%BUILD_DIR%\src\Game.exe"
+if "%RUN_EDITOR%"=="1" (
+    echo Running Editor...
+    if defined EDITOR_EXE (
+        "%EDITOR_EXE%"
+    ) else (
+        echo Editor executable not found
+    )
 )
 
 echo Done.
-exit /b 0
