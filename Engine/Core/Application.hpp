@@ -20,7 +20,7 @@ protected:
 
 private:
   bool m_isRunning = true;
-  std::unique_ptr<Window> m_Window;
+  std::unique_ptr<Window> m_Window; //useless commit
 };
 
   Application* CreateApplication();
