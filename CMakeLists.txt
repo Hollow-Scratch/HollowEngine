@@ -79,9 +79,6 @@ if(NOT TARGET ${TARGET})
 message(FATAL_ERROR "Target not found")
 endif()
 
-<<<<<<< HEAD
-    
-
     # Debug info + optimization per compiler/config
     if(MSVC)
         target_compile_options(${TARGET} PRIVATE
@@ -97,10 +94,8 @@ endif()
             $<$<CONFIG:RelWithDebInfo>:-g -O2>
             $<$<CONFIG:MinSizeRel>:-Os>
         )
-=======
 target_compile_features(${TARGET} PRIVATE cxx_std_23)
 set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
->>>>>>> f26854c164ea88d1369bf8ff54d89440afeb21e5
 
 set_target_properties(glad PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
