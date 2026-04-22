@@ -25,14 +25,16 @@ target_include_directories(AxiomEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Core
 )
 
-
-# Dependencies
+# X11 (Linux)
 if(UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
     target_link_libraries(AxiomEngine PRIVATE X11)
 endif()
 
-target_link_libraries(AxiomEngine PRIVATE glad)
+# Core dependencies (keep glad if you're using OpenGL later)
+target_link_libraries(AxiomEngine PRIVATE
+    glad
+)
 
 # Definitions
 target_compile_definitions(AxiomEngine PRIVATE AXIOM_ENGINE_EXPORTS)

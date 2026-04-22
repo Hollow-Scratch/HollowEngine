@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Core/Window.hpp"
+
 #include <X11/Xlib.h>
+#include <functional>
 
 namespace Axiom
 {
@@ -28,16 +30,21 @@ namespace Axiom
         void Init(const WindowProps& props);
         void Shutdown();
 
+        void Render();
+
     private:
         Display* m_Display = nullptr;
-        ::Window m_Window;
-        Atom m_WMDelete;
-        GC m_GC;
+        ::Window m_Window = 0;
+        Atom m_WMDelete = 0;
+        GC m_GC = nullptr;
 
         WindowProps m_Props;
+
         bool m_Running = true;
+        bool m_VSync = false;
+
+        bool m_Resized = false;
 
         EventCallbackFn m_Callback;
-        bool m_VSync = false;
     };
 }
