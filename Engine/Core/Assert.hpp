@@ -10,10 +10,11 @@
     #include <signal.h>
     #define AXIOM_DEBUG_BREAK() raise(SIGTRAP)
 #else
-    #define AXIOM_DEBUG_BREAK()
+    #include <cstdlib>
+    #define AXIOM_DEBUG_BREAK() std::abort()
 #endif
 
-// Enable asserts only in debug
+// Assertions enabled/disabled
 
 #if AXIOM_CONFIG_DEBUG
     #define AXIOM_ENABLE_ASSERTS 1
@@ -21,20 +22,20 @@
     #define AXIOM_ENABLE_ASSERTS 0
 #endif
 
-// Assert Macro
+// Assertion macro
 
 #if AXIOM_ENABLE_ASSERTS
 
-    #include <iostream>
+    #include <cstdio>
     #include <cstdlib>
 
-    #define AXIOM_ASSERT(x, msg)                                     \
+    #define AXIOM_ASSERT(x, msg)                                      \
         do {                                                         \
-            if (!(x)) {                                              \
-                std::cerr << "Assertion Failed: " << msg << "\n";    \
-                std::cerr << "File: " << __FILE__ << "\n";           \
-                std::cerr << "Line: " << __LINE__ << "\n";           \
-                std::cerr << "Function: " << __FUNCTION__ << "\n";   \
+            if (!(x)) [[unlikely]] {                                 \
+                std::fprintf(stderr, "Assertion Failed: %s\n", msg); \
+                std::fprintf(stderr, "File: %s\n", __FILE__);        \
+                std::fprintf(stderr, "Line: %d\n", __LINE__);        \
+                std::fprintf(stderr, "Function: %s\n", __func__);    \
                 AXIOM_DEBUG_BREAK();                                 \
                 std::abort();                                        \
             }                                                        \
@@ -44,7 +45,7 @@
 
 #else
 
-    #define AXIOM_ASSERT(x, msg)
-    #define AXIOM_ASSERT_NO_MSG(x)
+    #define AXIOM_ASSERT(x, msg) ((void)0)
+    #define AXIOM_ASSERT_NO_MSG(x) ((void)0)
 
 #endif

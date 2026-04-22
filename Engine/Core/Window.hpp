@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "Core.h"
+#include "Core.hpp"
 
 namespace Axiom {
 struct WindowProps {

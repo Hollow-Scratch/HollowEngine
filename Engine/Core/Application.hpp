@@ -2,7 +2,7 @@
 
 #include <memory>
 #include "Core/Window.hpp"
-#include "Core.h"
+#include "Core.hpp"
 
 namespace Axiom {
 class AXIOM_API Application {

@@ -53,15 +53,12 @@ else()
     message(FATAL_ERROR "Unsupported compiler")
 endif()
 
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(external/glfw)
-
+# GLAD (OpenGL loader)
 add_library(glad STATIC external/glad/src/glad.c)
+set_target_properties(glad PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(glad PUBLIC ${PROJECT_SOURCE_DIR}/external/glad/include)
+
 
 add_subdirectory(Engine)
 add_subdirectory(Editor)
