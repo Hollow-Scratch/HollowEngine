@@ -2,7 +2,7 @@
 #include "Core.hpp"
 #include <chrono>
 
-namespace Raycaster
+namespace Hollow
 {
     class RAYCASTER_API Time
     {

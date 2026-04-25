@@ -1,7 +1,7 @@
 #include "Raycaster.h"
 #include <iostream>
 
-namespace Raycaster {
+namespace Hollow {
 
 class SandboxApp : public Application {
 protected:

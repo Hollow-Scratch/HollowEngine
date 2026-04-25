@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace Raycaster {
+namespace Hollow {
 
 struct WindowProps {
     std::string Title = "Axiom Engine";

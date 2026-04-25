@@ -2,7 +2,7 @@
 #include <glad/gl.h>
 #include <iostream>
 
-namespace Raycaster {
+namespace Hollow {
 
 static unsigned int vao = 0;
 static unsigned int vbo = 0;
@@ -112,4 +112,4 @@ void Renderer::Draw()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-} 
+}

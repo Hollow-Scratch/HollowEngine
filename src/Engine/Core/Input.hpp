@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Raycaster {
+namespace Hollow {
 
 class Input {
 public:

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace Raycaster {
+namespace Hollow {
 
 class Window;
 

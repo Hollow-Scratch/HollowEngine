@@ -4,7 +4,7 @@
 #include "Input.hpp"
 #include <iostream>
 
-namespace Raycaster
+namespace Hollow
 {
 
 Application* Application::s_Instance = nullptr;
@@ -22,7 +22,7 @@ void Application::Run()
 
     OnInit();
 
-    Raycaster::Time time;
+    Hollow::Time time;
 
     float timer = 0.0f;
     int frames = 0;

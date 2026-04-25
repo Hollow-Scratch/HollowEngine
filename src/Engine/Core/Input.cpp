@@ -3,7 +3,7 @@
 #include "Core/Window.hpp"
 #include <GLFW/glfw3.h>
 
-namespace Raycaster {
+namespace Hollow {
 
 static bool s_CurrentKeys[1024] = {};
 static bool s_PreviousKeys[1024] = {};

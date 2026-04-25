@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-namespace Raycaster {
+namespace Hollow {
 
 GLFWWindow::GLFWWindow(const WindowProps& props) {
     Init(props);

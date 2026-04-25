@@ -2,13 +2,13 @@
 
 #include "Core/Application.hpp"
 
-namespace Raycaster {
+namespace Hollow {
     extern Application* CreateApplication();
 }
 
 int main()
 {
-    auto app = Raycaster::CreateApplication();
+    auto app = Hollow::CreateApplication();
     app->Run();
     delete app;
     return 0;

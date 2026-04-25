@@ -1,7 +1,7 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
-namespace Raycaster {
+namespace Hollow {
 
 enum KeyCode {
     Key_Space = GLFW_KEY_SPACE,

@@ -1,7 +1,7 @@
 #include "Time.hpp"
 #include <chrono>
 
-namespace Raycaster
+namespace Hollow
 {
     using clock = std::chrono::high_resolution_clock;
 
