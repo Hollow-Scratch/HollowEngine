@@ -1,0 +1,12 @@
+Checks: >
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-*
+
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*'
+
+CheckOptions:
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
