@@ -1,46 +1,36 @@
-# Prerequisites
-*.d
+build/
+build-*/
+cmake-build-*/
+out/
+bin/
 
-# Compiled Object files
-*.slo
-*.lo
+.cache/
+.clangd/
+.idea/
+.vscode/ipch/
+.vscode/
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
-*.lib
-
-# Executables
+*.so
+*.dll
+*.dylib
 *.exe
 *.out
-*.app
+*.log
+*.pdb
+*.d
+*.gcno
+*.gcda
+*.gcov
+*.profraw
 
-# debug information files
-*.dwo
-
-
-build/
-compile_commands.json
-.cache/
+.DS_Store
+.clang-format
