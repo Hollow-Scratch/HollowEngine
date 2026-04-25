@@ -1,40 +1,43 @@
 #include "Renderer.hpp"
 #include "Graphics/Shader.hpp"
+#include "Graphics/VertexArray.hpp"
+#include "Graphics/VertexBuffer.hpp"
+#include "Graphics/BufferLayout.hpp"
+
 #include <glad/gl.h>
-#include <iostream>
+#include <memory>
+
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Hollow {
 
-static unsigned int vao = 0;
-static unsigned int vbo = 0;
-static Shader* shader = nullptr;
+static std::unique_ptr<VertexArray> vao;
+static std::unique_ptr<VertexBuffer> vbo;
+static std::unique_ptr<Shader> shader;
 
 void Renderer::Init()
 {
-    std::cout << "[Renderer] OpenGL Version: " << glGetString(GL_VERSION) << "\n";
-
-    // Create shader
-    shader = new Shader(
+    shader = std::make_unique<Shader>(
         "assets/shaders/basic.vert",
         "assets/shaders/basic.frag"
     );
 
-    // Triangle vertices
     float vertices[] = {
          0.0f,  0.5f,
         -0.5f, -0.5f,
          0.5f, -0.5f
     };
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    vao = std::make_unique<VertexArray>();
+    vbo = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    BufferLayout layout;
+    layout.PushFloat(2);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    vao->AddBuffer(*vbo, layout);
 }
 
 void Renderer::Clear(float r, float g, float b)
@@ -46,7 +49,28 @@ void Renderer::Clear(float r, float g, float b)
 void Renderer::Draw()
 {
     shader->Bind();
-    glBindVertexArray(vao);
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    glm::mat4 view = glm::translate(glm::mat4(1.0f),
+                                    glm::vec3(0.0f, 0.0f, -2.0f));
+
+    float aspect = 800.0f / 600.0f; // change later to window size
+    glm::mat4 projection = glm::perspective(
+        glm::radians(45.0f),
+        aspect,
+        0.1f,
+        100.0f
+    );
+
+    glm::mat4 mvp = projection * view * model;
+
+    shader->SetMat4("u_MVP", glm::value_ptr(mvp));
+
+    // color still works
+    shader->SetVec3("u_Color", 0.2f, 0.8f, 1.0f);
+
+    vao->Bind();
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 

@@ -11,7 +11,7 @@ std::string Shader::ReadFile(const std::string& path)
     std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "[Shader] Failed to open file: " << path << "\n";
-        return "";
+        std::abort();
     }
 
     std::stringstream ss;
@@ -34,6 +34,7 @@ unsigned int Shader::Compile(unsigned int type, const std::string& source)
         char info[1024];
         glGetShaderInfoLog(id, 1024, nullptr, info);
         std::cerr << "[Shader Compile Error]\n" << info << "\n";
+        std::abort();
     }
 
     return id;
@@ -43,6 +44,11 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
     std::string vertexSrc = ReadFile(vertexPath);
     std::string fragmentSrc = ReadFile(fragmentPath);
+
+    if (vertexSrc.empty() || fragmentSrc.empty()) {
+        std::cerr << "[Shader] Source is empty\n";
+        std::abort();
+    }
 
     unsigned int vertex = Compile(GL_VERTEX_SHADER, vertexSrc);
     unsigned int fragment = Compile(GL_FRAGMENT_SHADER, fragmentSrc);
@@ -59,6 +65,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
         char info[1024];
         glGetProgramInfoLog(m_ID, 1024, nullptr, info);
         std::cerr << "[Shader Link Error]\n" << info << "\n";
+        std::abort();
     }
 
     glDeleteShader(vertex);
@@ -82,8 +89,9 @@ void Shader::Unbind() const
 
 int Shader::GetUniformLocation(const std::string& name)
 {
-    if (m_UniformCache.find(name) != m_UniformCache.end())
-        return m_UniformCache[name];
+    auto it = m_UniformCache.find(name);
+    if (it != m_UniformCache.end())
+        return it->second;
 
     int location = glGetUniformLocation(m_ID, name.c_str());
 
@@ -103,6 +111,16 @@ void Shader::SetFloat(const std::string& name, float value)
 void Shader::SetInt(const std::string& name, int value)
 {
     glUniform1i(GetUniformLocation(name), value);
+}
+
+void Shader::SetVec3(const std::string& name, float x, float y, float z)
+{
+    glUniform3f(GetUniformLocation(name), x, y, z);
+}
+
+void Shader::SetMat4(const std::string& name, const float* value)
+{
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);
 }
 
 }
