@@ -1,4 +1,6 @@
 #include "Core/Input.hpp"
+#include "Core/Keycodes.hpp"
+#include "Renderer/Renderer.hpp"
 #include "Raycaster.h"
 #include <iostream>
 
@@ -8,29 +10,29 @@ class SandboxApp : public Application {
 protected:
     void OnInit() override {
         std::cout << "[Sandbox] Init\n";
+
+        Renderer::Init();
     }
 
     void OnUpdate(float dt) override {
-        // Example update logic
-        // (replace with raycasting / movement later)
         (void)dt;
 
-        //std::cout << "HAHAH";
+        Renderer::Clear(0.1f, 0.1f, 0.2f);
 
-        if(Input::IsKeyPressed(Raycaster::Key_W)) {
+        Renderer::Draw();
+
+        if (Input::IsKeyPressed(Key_W)) {
             std::cout << "W is down\n";
         }
     }
 
     void OnShutdown() override {
-        //std::cout << "[Sandbox] Shutdown\n";
     }
 };
-
 
 Application* CreateApplication()
 {
     return new SandboxApp();
 }
 
-} 
+}

@@ -25,6 +25,11 @@ void GLFWWindow::Init(const WindowProps& props) {
         std::abort();
     }
 
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     m_Window = glfwCreateWindow(
@@ -43,12 +48,24 @@ void GLFWWindow::Init(const WindowProps& props) {
 
     glfwMakeContextCurrent(m_Window);
 
+    if (glfwGetCurrentContext() != m_Window) {
+        std::cerr << "[GLFW] Failed to make OpenGL context current\n";
+        std::abort();
+    }
+
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cerr << "[GLAD] Failed to initialize\n";
         std::abort();
     }
 
-    std::cout << "[OpenGL] Version: " << glGetString(GL_VERSION) << "\n";
+    if (glad_glGetString == nullptr) {
+        std::cerr << "[GLAD] glGetString is NULL after gladLoadGL\n";
+        std::abort();
+    }
+
+    std::cout << "[OpenGL] Version: "  << glGetString(GL_VERSION)  << "\n";
+    std::cout << "[OpenGL] Vendor: "   << glGetString(GL_VENDOR)   << "\n";
+    std::cout << "[OpenGL] Renderer: " << glGetString(GL_RENDERER) << "\n";
 
     glfwSwapInterval(m_Data.VSync ? 1 : 0);
 

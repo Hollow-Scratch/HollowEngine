@@ -18,9 +18,9 @@ Application::~Application() noexcept = default;
 
 void Application::Run()
 {
-    OnInit();
-
     m_Window = Window::Create();
+
+    OnInit();
 
     Raycaster::Time time;
 
