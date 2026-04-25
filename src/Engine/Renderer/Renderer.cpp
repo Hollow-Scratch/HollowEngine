@@ -46,7 +46,7 @@ static void CreateShader()
         out vec4 FragColor;
         void main()
         {
-            FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            FragColor = vec4(1.0, 0.5, 0.0, 1.0);
         }
     )";
 
@@ -81,9 +81,11 @@ void Renderer::Init()
 
     CreateShader();
 
+    // Triangle vertices
     float vertices[] = {
-        -0.5f, 0.0f,
-         0.5f, 0.0f
+         0.0f,  0.5f,   // top
+        -0.5f, -0.5f,   // left
+         0.5f, -0.5f    // right
     };
 
     glGenVertexArrays(1, &vao);
@@ -107,7 +109,7 @@ void Renderer::Draw()
 {
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
-    glDrawArrays(GL_LINES, 0, 2);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-}
+} 
