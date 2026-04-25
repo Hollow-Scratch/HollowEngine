@@ -2,6 +2,7 @@ file(GLOB_RECURSE ENGINE_SRC
     Core/*.cpp
     Renderer/*.cpp
     Platform/*.cpp
+    Graphics/*.cpp
 )
 
 file(GLOB_RECURSE ENGINE_HEADERS

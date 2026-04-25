@@ -8,3 +8,5 @@ target_include_directories(Sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/Engine
 )
+
+add_dependencies(Sandbox copy_assets)

@@ -31,20 +31,20 @@ void Application::Run()
     {
         time.beginFrame();
 
-        float dt = time.getScaledDeltaTime();
+        float DeltaTime = time.getScaledDeltaTime();
 
         Input::Update();
 
-        OnUpdate(dt);
+        OnUpdate(DeltaTime);
 
         m_Window->OnUpdate();
 
-        timer += dt;
+        timer += DeltaTime;
         frames++;
 
         if (timer >= 1.0f)
         {
-            float fps = frames / timer;
+            float fps = static_cast<float>(frames) / timer;
             std::cout << "FPS: " << fps << std::endl;
 
             timer = 0.0f;

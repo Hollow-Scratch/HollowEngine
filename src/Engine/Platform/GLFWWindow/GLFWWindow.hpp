@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Core/Window.hpp"
-
-#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 namespace Hollow {
@@ -10,7 +8,7 @@ namespace Hollow {
 class GLFWWindow : public Window {
 public:
     GLFWWindow(const WindowProps& props);
-    ~GLFWWindow() override;
+    ~GLFWWindow();
 
     void OnUpdate() override;
     void Shutdown() override;
@@ -22,6 +20,7 @@ public:
     bool IsVSync() const override;
 
     void SetEventCallback(const EventCallbackFn& callback) override;
+
     void* GetNativeWindow() const override;
 
     bool ShouldClose() const override;
@@ -32,14 +31,14 @@ private:
 private:
     GLFWwindow* m_Window = nullptr;
 
-    struct Data {
+    struct WindowData {
         std::string Title;
-        uint32_t Width = 0;
-        uint32_t Height = 0;
-        bool VSync = true;
-
+        uint32_t Width, Height;
+        bool VSync;
         EventCallbackFn EventCallback;
-    } m_Data;
+    };
+
+    WindowData m_Data;
 };
 
 }

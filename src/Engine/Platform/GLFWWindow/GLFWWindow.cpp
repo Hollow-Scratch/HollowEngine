@@ -20,16 +20,14 @@ void GLFWWindow::Init(const WindowProps& props) {
     m_Data.Height = props.Height;
     m_Data.VSync  = props.VSync;
 
-    if (!glfwInit()) {
+    if (glfwInit() == GLFW_FALSE) {
         std::cerr << "[GLFW] Init failed\n";
         std::abort();
     }
 
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     m_Window = glfwCreateWindow(
@@ -59,7 +57,7 @@ void GLFWWindow::Init(const WindowProps& props) {
     }
 
     if (glad_glGetString == nullptr) {
-        std::cerr << "[GLAD] glGetString is NULL after gladLoadGL\n";
+        std::cerr << "[GLAD] glGetString is NULL\n";
         std::abort();
     }
 
@@ -69,7 +67,18 @@ void GLFWWindow::Init(const WindowProps& props) {
 
     glfwSwapInterval(m_Data.VSync ? 1 : 0);
 
-    std::cout << "[GLFW] Window created\n";
+    glfwSetWindowUserPointer(m_Window, &m_Data);
+
+    glfwSetFramebufferSizeCallback(m_Window,
+    [](GLFWwindow* window, int width, int height)
+    {
+        auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        data.Width  = width;
+        data.Height = height;
+        glViewport(0, 0, width, height);
+    });
+
+    glViewport(0, 0, m_Data.Width, m_Data.Height);
 }
 
 void GLFWWindow::OnUpdate() {
