@@ -12,35 +12,32 @@ file(GLOB_RECURSE ENGINE_HEADERS
     Graphics/*.hpp
 )
 
-# GLAD
-add_library(glad ../../external/glad/src/gl.c)
-
-target_include_directories(glad PUBLIC
-    ../../external/glad/include
-)
-
-set_target_properties(glad PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-
 # Engine
-add_library(Engine SHARED ${ENGINE_SRC} ${ENGINE_HEADERS})
+add_library(Engine SHARED ${ENGINE_SRC})
 
 target_include_directories(Engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/external/entt/src
+    ${CMAKE_SOURCE_DIR}/external/entt/include
+    ${CMAKE_SOURCE_DIR}/external/bgfx/include
+    ${CMAKE_SOURCE_DIR}/external/bx/include
+    ${CMAKE_SOURCE_DIR}/external/bimg/include
+)
+
+target_compile_definitions(Engine PUBLIC
+    GLFW_INCLUDE_NONE
 )
 
 # Dependencies
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(OpenGL REQUIRED)
 
+# bgfx libraries
 target_link_libraries(Engine PUBLIC
     glfw
-    glad
-    OpenGL::GL
     glm::glm
+    bgfx
+    bx
+    bimg
 )
 
 target_compile_options(Engine PRIVATE

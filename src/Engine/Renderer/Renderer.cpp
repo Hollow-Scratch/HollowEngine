@@ -4,7 +4,7 @@
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/BufferLayout.hpp"
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <memory>
 
 

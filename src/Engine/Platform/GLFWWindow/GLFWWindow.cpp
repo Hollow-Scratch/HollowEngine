@@ -1,5 +1,4 @@
-#include <glad/gl.h>
-#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
 #include "GLFWWindow.hpp"
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -51,7 +50,7 @@ void GLFWWindow::Init(const WindowProps& props) {
         std::abort();
     }
 
-    if (!gladLoadGL(glfwGetProcAddress)) {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "[GLAD] Failed to initialize\n";
         std::abort();
     }
