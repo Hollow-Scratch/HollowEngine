@@ -17,6 +17,7 @@ class Renderer
 public:
     static void Init();
     static void Shutdown();
+    static void ConfigureInstancing(VertexArray& vao);
 
     static void Clear(float r, float g, float b);
     static void Resize(uint32_t width, uint32_t height);

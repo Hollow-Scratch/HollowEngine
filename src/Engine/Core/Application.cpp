@@ -4,6 +4,7 @@
 #include "Renderer/Renderer.hpp"
 #include "Renderer/Framebuffer.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace Hollow
 {
@@ -25,14 +26,39 @@ void Application::Run()
     Renderer::Init();
     OnInit();
 
-    float timer = 0.0f;
-    int frames = 0;
-
     while (m_Window && !m_Window->ShouldClose())
     {
         m_Time.beginFrame();
 
         float DeltaTime = m_Time.getScaledDeltaTime();
+
+        static float minDt = 1000.0f;
+        static float maxDt = 0.0f;
+        static float sumDt = 0.0f;
+        static int frameCount = 0;
+
+        minDt = std::min(minDt, DeltaTime);
+        maxDt = std::max(maxDt, DeltaTime);
+        sumDt += DeltaTime;
+        frameCount++;
+
+        if (frameCount >= 60)
+        {
+            float avgDt = sumDt / frameCount;
+            float fps = 1.0f / avgDt;
+
+            std::cout
+                << "min: " << minDt * 1000.0f << " ms, "
+                << "avg: " << avgDt * 1000.0f << " ms, "
+                << "max: " << maxDt * 1000.0f << " ms, "
+                << "FPS(avg): " << fps
+                << std::endl;
+
+            minDt = 1000.0f;
+            maxDt = 0.0f;
+            sumDt = 0.0f;
+            frameCount = 0;
+        }
 
         Input::Update();
 
@@ -40,18 +66,6 @@ void Application::Run()
         OnUpdate(DeltaTime);
 
         m_Window->OnUpdate();
-
-        timer += DeltaTime;
-        frames++;
-
-        if (timer >= 1.0f)
-        {
-            float fps = static_cast<float>(frames) / timer;
-            std::cout << "FPS: " << fps << std::endl;
-
-            timer = 0.0f;
-            frames = 0;
-        }
 
         m_Time.endFrame();
     }

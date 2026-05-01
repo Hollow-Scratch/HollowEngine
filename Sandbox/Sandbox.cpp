@@ -74,6 +74,7 @@ protected:
         auto sharedTexture = std::make_shared<Texture>("assets/textures/crate.png");
 
         sharedVAO->AddBuffer(*sharedVBO, layout);
+        Renderer::ConfigureInstancing(*sharedVAO);
         sharedEBO->Bind();
 
         int count = 32;

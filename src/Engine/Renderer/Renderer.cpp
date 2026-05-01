@@ -7,6 +7,7 @@
 
 #include <glad/glad.h>
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -27,13 +28,10 @@ bool IsSameBatch(const InstanceBatch& batch,
                  const MeshComponent& mesh,
                  const MaterialComponent* material)
 {
-    const Texture* batchTexture = batch.Material ? batch.Material->Diffuse.get() : nullptr;
-    const Texture* materialTexture = material ? material->Diffuse.get() : nullptr;
-
     return batch.Mesh &&
+           batch.Material == material &&
            batch.Mesh->VAO.get() == mesh.VAO.get() &&
            batch.Mesh->EBO.get() == mesh.EBO.get() &&
-           batchTexture == materialTexture &&
            batch.Mesh->IndexCount == mesh.IndexCount;
 }
 
@@ -111,6 +109,13 @@ void Renderer::Init()
     s_Framebuffer = std::make_unique<Framebuffer>(1, 1);
 
     glGenBuffers(1, &s_InstanceVBO);
+}
+
+void Renderer::ConfigureInstancing(VertexArray& vao)
+{
+    vao.Bind();
+    glBindBuffer(GL_ARRAY_BUFFER, s_InstanceVBO);
+    SetupInstanceAttributes();
 }
 
 void Renderer::Shutdown()
@@ -202,13 +207,13 @@ void Renderer::Draw(Registry& registry, float width, float height)
         if (aIt == aabbs.end())
             continue;
 
+        auto mIt = materials.find(entity);
+        if (mIt == materials.end())
+            continue;
+
         auto& transform = tIt->second;
         auto& aabb = aIt->second;
-        const MaterialComponent* material = nullptr;
-
-        auto mIt = materials.find(entity);
-        if (mIt != materials.end())
-            material = &mIt->second;
+        const MaterialComponent* material = &mIt->second;
 
         glm::mat4 model(1.0f);
         model = glm::translate(model, transform.Position);
@@ -252,6 +257,18 @@ void Renderer::Draw(Registry& registry, float width, float height)
     if (activeBatchCount == 0)
         return;
 
+    std::sort(
+        s_Batches.begin(),
+        s_Batches.begin() + activeBatchCount,
+        [](const InstanceBatch& a, const InstanceBatch& b)
+        {
+            if (a.Material != b.Material)
+                return a.Material < b.Material;
+
+            return a.Mesh->VAO.get() < b.Mesh->VAO.get();
+        }
+    );
+
     glBindBuffer(GL_ARRAY_BUFFER, s_InstanceVBO);
     s_Shader->SetMat4("u_ViewProjection", glm::value_ptr(vp));
 
@@ -264,7 +281,6 @@ void Renderer::Draw(Registry& registry, float width, float height)
 
         batch.Mesh->VAO->Bind();
         batch.Mesh->EBO->Bind();
-        SetupInstanceAttributes();
 
         if (batch.Material && batch.Material->Diffuse)
             batch.Material->Diffuse->Bind(0);
