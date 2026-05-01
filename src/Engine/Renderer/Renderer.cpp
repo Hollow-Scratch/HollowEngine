@@ -19,25 +19,32 @@ namespace {
 struct InstanceBatch
 {
     const MeshComponent* Mesh = nullptr;
+    const MaterialComponent* Material = nullptr;
     std::vector<glm::mat4> Models;
 };
 
-bool IsSameBatch(const InstanceBatch& batch, const MeshComponent& mesh)
+bool IsSameBatch(const InstanceBatch& batch,
+                 const MeshComponent& mesh,
+                 const MaterialComponent* material)
 {
+    const Texture* batchTexture = batch.Material ? batch.Material->Diffuse.get() : nullptr;
+    const Texture* materialTexture = material ? material->Diffuse.get() : nullptr;
+
     return batch.Mesh &&
            batch.Mesh->VAO.get() == mesh.VAO.get() &&
            batch.Mesh->EBO.get() == mesh.EBO.get() &&
-           batch.Mesh->TextureData.get() == mesh.TextureData.get() &&
+           batchTexture == materialTexture &&
            batch.Mesh->IndexCount == mesh.IndexCount;
 }
 
 InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches,
                                 const MeshComponent& mesh,
+                                const MaterialComponent* material,
                                 size_t& activeCount)
 {
     for (size_t i = 0; i < activeCount; i++)
     {
-        if (IsSameBatch(batches[i], mesh))
+        if (IsSameBatch(batches[i], mesh, material))
             return batches[i];
     }
 
@@ -46,6 +53,7 @@ InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches,
 
     InstanceBatch& batch = batches[activeCount++];
     batch.Mesh = &mesh;
+    batch.Material = material;
     batch.Models.clear();
     return batch;
 }
@@ -175,6 +183,7 @@ void Renderer::Draw(Registry& registry, float width, float height)
     s_Frustum.Update(vp);
 
     auto& meshes = registry.GetMeshes();
+    auto& materials = registry.GetMaterials();
     auto& transforms = registry.GetTransforms();
     auto& aabbs = registry.GetAABBs();
 
@@ -195,12 +204,11 @@ void Renderer::Draw(Registry& registry, float width, float height)
 
         auto& transform = tIt->second;
         auto& aabb = aIt->second;
+        const MaterialComponent* material = nullptr;
 
-        aabb.Center = transform.Position;
-        aabb.Extents = glm::abs(transform.Scale) * 0.5f;
-
-        if (!s_Frustum.Intersects(aabb))
-            continue;
+        auto mIt = materials.find(entity);
+        if (mIt != materials.end())
+            material = &mIt->second;
 
         glm::mat4 model(1.0f);
         model = glm::translate(model, transform.Position);
@@ -214,7 +222,30 @@ void Renderer::Draw(Registry& registry, float width, float height)
 
         model = glm::scale(model, transform.Scale);
 
-        InstanceBatch& batch = GetOrCreateBatch(s_Batches, mesh, activeBatchCount);
+        const bool hasValidLocalBounds =
+            mesh.LocalBoundsMax.x >= mesh.LocalBoundsMin.x &&
+            mesh.LocalBoundsMax.y >= mesh.LocalBoundsMin.y &&
+            mesh.LocalBoundsMax.z >= mesh.LocalBoundsMin.z;
+
+        if (hasValidLocalBounds)
+        {
+            const glm::vec3 localCenter = (mesh.LocalBoundsMin + mesh.LocalBoundsMax) * 0.5f;
+            const glm::vec3 localExtents = (mesh.LocalBoundsMax - mesh.LocalBoundsMin) * 0.5f;
+            const glm::mat3 linearTransform(model);
+
+            glm::mat3 absLinearTransform(1.0f);
+            absLinearTransform[0] = glm::abs(linearTransform[0]);
+            absLinearTransform[1] = glm::abs(linearTransform[1]);
+            absLinearTransform[2] = glm::abs(linearTransform[2]);
+
+            aabb.Center = glm::vec3(model * glm::vec4(localCenter, 1.0f));
+            aabb.Extents = absLinearTransform * localExtents;
+
+            if (!s_Frustum.Intersects(aabb))
+                continue;
+        }
+
+        InstanceBatch& batch = GetOrCreateBatch(s_Batches, mesh, material, activeBatchCount);
         batch.Models.push_back(model);
     }
 
@@ -235,8 +266,10 @@ void Renderer::Draw(Registry& registry, float width, float height)
         batch.Mesh->EBO->Bind();
         SetupInstanceAttributes();
 
-        if (batch.Mesh->TextureData)
-            batch.Mesh->TextureData->Bind(0);
+        if (batch.Material && batch.Material->Diffuse)
+            batch.Material->Diffuse->Bind(0);
+        else
+            glBindTexture(GL_TEXTURE_2D, 0);
 
         glDrawElementsInstanced(
             GL_TRIANGLES,

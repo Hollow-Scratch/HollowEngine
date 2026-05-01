@@ -5,6 +5,7 @@
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/IndexBuffer.hpp"
 #include "Graphics/Texture.hpp"
+#include <cstdint>
 #include <glm/vec3.hpp>
 #include <memory>
 
@@ -28,10 +29,14 @@ struct MeshComponent
     std::shared_ptr<VertexArray> VAO;
     std::shared_ptr<VertexBuffer> VBO;
     std::shared_ptr<IndexBuffer> EBO;
+    uint32_t IndexCount = 0;
+    glm::vec3 LocalBoundsMin{0.5f};
+    glm::vec3 LocalBoundsMax{-0.5f};
+};
 
-    std::shared_ptr<Texture> TextureData;
-
-    unsigned int IndexCount = 0;
+struct MaterialComponent
+{
+    std::shared_ptr<Texture> Diffuse;
 };
 
 struct CameraComponent

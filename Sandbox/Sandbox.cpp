@@ -96,8 +96,12 @@ protected:
             mesh.VAO = sharedVAO;
             mesh.VBO = sharedVBO;
             mesh.EBO = sharedEBO;
-            mesh.TextureData = sharedTexture;
             mesh.IndexCount = 36;
+            mesh.LocalBoundsMin = { -0.5f, -0.5f, -0.5f };
+            mesh.LocalBoundsMax = {  0.5f,  0.5f,  0.5f };
+
+            auto& mat = m_Registry.AddMaterial(e);
+            mat.Diffuse = sharedTexture;
         }
 
         m_CameraEntity = m_Registry.CreateEntity();
