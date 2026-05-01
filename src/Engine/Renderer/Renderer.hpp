@@ -7,6 +7,7 @@ namespace Hollow {
 class VertexArray;
 class VertexBuffer;
 class Shader;
+class Registry;
 
 class Renderer
 {
@@ -15,7 +16,7 @@ public:
     static void Shutdown();
 
     static void Clear(float r, float g, float b);
-    static void Draw();
+    static void Draw(Registry& registry, float width, float height);
 
 private:
     static std::unique_ptr<VertexArray> s_VAO;

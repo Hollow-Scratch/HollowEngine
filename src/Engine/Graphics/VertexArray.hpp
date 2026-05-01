@@ -15,6 +15,8 @@ public:
 
     void AddBuffer(const VertexBuffer& vb, const BufferLayout& layout);
 
+    void Destroy();
+
 private:
     unsigned int m_ID = 0;
 };

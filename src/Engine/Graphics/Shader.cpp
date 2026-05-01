@@ -72,9 +72,15 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
     glDeleteShader(fragment);
 }
 
-Shader::~Shader()
+Shader::~Shader() {}
+
+void Shader::Destroy()
 {
-    glDeleteProgram(m_ID);
+    if (m_ID != 0)
+    {
+        glDeleteProgram(m_ID);
+        m_ID = 0;
+    }
 }
 
 void Shader::Bind() const

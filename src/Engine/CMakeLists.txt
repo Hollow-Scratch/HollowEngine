@@ -4,6 +4,7 @@ file(GLOB_RECURSE ENGINE_SRC
     Renderer/*.cpp
     Platform/*.cpp
     Graphics/*.cpp
+    ECS/*.cpp
 )
 
 # Engine library

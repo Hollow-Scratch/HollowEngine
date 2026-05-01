@@ -3,6 +3,7 @@
 #include "Graphics/VertexArray.hpp"
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/BufferLayout.hpp"
+#include "ECS/Registry.hpp"
 
 #include <glad/glad.h>
 
@@ -42,6 +43,15 @@ void Renderer::Init()
 
 void Renderer::Shutdown()
 {
+    if (s_Shader)
+        s_Shader->Destroy();
+
+    if (s_VAO)
+        s_VAO->Destroy();
+
+    if (s_VBO)
+        s_VBO->Destroy();
+
     s_Shader.reset();
     s_VAO.reset();
     s_VBO.reset();
@@ -53,30 +63,36 @@ void Renderer::Clear(float r, float g, float b)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::Draw()
+void Renderer::Draw(Registry& registry, float width, float height)
 {
     s_Shader->Bind();
 
-    glm::mat4 model = glm::mat4(1.0f);
+    float aspect = width / height;
 
-    glm::mat4 view = glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(0.0f, 0.0f, -2.0f));
-
-    float aspect = 800.0f / 600.0f;
-    glm::mat4 projection = glm::perspective(
-        glm::radians(45.0f),
-        aspect,
-        0.1f,
-        100.0f
+    glm::mat4 projection = glm::ortho(
+        -aspect, aspect,
+        -1.0f, 1.0f,
+        -1.0f, 1.0f
     );
 
-    glm::mat4 mvp = projection * view * model;
-
-    s_Shader->SetMat4("u_MVP", glm::value_ptr(mvp));
-    s_Shader->SetVec3("u_Color", 0.2f, 0.8f, 1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
 
     s_VAO->Bind();
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    for (auto& [entity, transform] : registry.GetTransforms())
+    {
+        if (registry.GetMeshes().find(entity) == registry.GetMeshes().end())
+            continue;
+
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.Position);
+
+        glm::mat4 mvp = projection * view * model;
+
+        s_Shader->SetMat4("u_MVP", glm::value_ptr(mvp));
+        s_Shader->SetVec3("u_Color", 0.2f, 0.8f, 1.0f);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
 }
 
 }

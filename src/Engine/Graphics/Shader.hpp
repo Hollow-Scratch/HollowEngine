@@ -20,11 +20,12 @@ public:
     void Bind() const;
     void Unbind() const;
 
-
     void SetFloat(const std::string& name, float value);
     void SetInt(const std::string& name, int value);
     void SetVec3(const std::string& name, float x, float y, float z);
     void SetMat4(const std::string& name, const float* value);
+
+    void Destroy();
 
 private:
     unsigned int m_ID = 0;

@@ -8,9 +8,15 @@ VertexArray::VertexArray()
     glGenVertexArrays(1, &m_ID);
 }
 
-VertexArray::~VertexArray()
+VertexArray::~VertexArray() {}
+
+void VertexArray::Destroy()
 {
-    glDeleteVertexArrays(1, &m_ID);
+    if (m_ID != 0)
+    {
+        glDeleteVertexArrays(1, &m_ID);
+        m_ID = 0;
+    }
 }
 
 void VertexArray::Bind() const

@@ -11,6 +11,8 @@ public:
     void Bind() const;
     void Unbind() const;
 
+    void Destroy();
+
 private:
     unsigned int m_ID = 0;
 };

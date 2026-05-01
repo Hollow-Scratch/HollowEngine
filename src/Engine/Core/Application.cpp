@@ -37,10 +37,11 @@ void Application::Run()
 
         Input::Update();
 
-        OnUpdate(DeltaTime);
         Renderer::Clear(0.1f, 0.1f, 0.2f);
+        OnUpdate(DeltaTime);
+        
 
-        Renderer::Draw();
+        
 
         m_Window->OnUpdate();
 
