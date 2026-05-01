@@ -71,7 +71,7 @@ protected:
         auto sharedVAO = std::make_shared<VertexArray>();
         auto sharedVBO = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
         auto sharedEBO = std::make_shared<IndexBuffer>(indices, 36);
-        auto sharedTexture = std::make_shared<Texture>("assets/textures/crate.png");
+        auto sharedTexture = std::make_shared<Texture>("Sandbox/assets/textures/crate.png");
 
         sharedVAO->AddBuffer(*sharedVBO, layout);
         Renderer::ConfigureInstancing(*sharedVAO);

@@ -77,13 +77,10 @@ void UploadInstanceData(size_t size, const glm::mat4* data, size_t& capacity)
 {
     if (size > capacity)
     {
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-        capacity = size;
+        capacity = std::max(size, capacity * 2);
+        glBufferData(GL_ARRAY_BUFFER, capacity, nullptr, GL_DYNAMIC_DRAW);
     }
-    else
-    {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
-    }
+    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 }
 
 }
@@ -102,8 +99,8 @@ void Renderer::Init()
     glEnable(GL_DEPTH_TEST);
 
     s_Shader = std::make_unique<Shader>(
-        "assets/shaders/basic.vert",
-        "assets/shaders/basic.frag"
+        "Sandbox/assets/shaders/basic.vert",
+        "Sandbox/assets/shaders/basic.frag"
     );
 
     s_Framebuffer = std::make_unique<Framebuffer>(1, 1);

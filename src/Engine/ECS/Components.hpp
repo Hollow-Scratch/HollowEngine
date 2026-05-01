@@ -5,9 +5,13 @@
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/IndexBuffer.hpp"
 #include "Graphics/Texture.hpp"
+#include "Graphics/BufferLayout.hpp"
+
 #include <cstdint>
 #include <glm/vec3.hpp>
+#include <glm/common.hpp>
 #include <memory>
+#include <vector>
 
 namespace Hollow {
 
@@ -32,6 +36,40 @@ struct MeshComponent
     uint32_t IndexCount = 0;
     glm::vec3 LocalBoundsMin{0.5f};
     glm::vec3 LocalBoundsMax{-0.5f};
+
+    void Setup(const std::vector<float>& vertices,
+               const std::vector<uint32_t>& indices)
+    {
+        VAO = std::make_shared<VertexArray>();
+        VBO = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(float));
+        EBO = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+
+        BufferLayout layout;
+        layout.PushFloat(3);
+
+        VAO->AddBuffer(*VBO, layout);
+
+        VAO->Bind();
+        EBO->Bind();
+
+        IndexCount = indices.size();
+
+        if (!vertices.empty())
+        {
+            glm::vec3 min(vertices[0], vertices[1], vertices[2]);
+            glm::vec3 max = min;
+
+            for (size_t i = 0; i < vertices.size(); i += 3)
+            {
+                glm::vec3 v(vertices[i], vertices[i + 1], vertices[i + 2]);
+                min = glm::min(min, v);
+                max = glm::max(max, v);
+            }
+
+            LocalBoundsMin = min;
+            LocalBoundsMax = max;
+        }
+    }
 };
 
 struct MaterialComponent
