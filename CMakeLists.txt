@@ -44,6 +44,7 @@ if(HEAVY_RELEASE AND CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 add_subdirectory(src/Engine)
+add_subdirectory(src/Editor)
 add_subdirectory(Sandbox)
 
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)

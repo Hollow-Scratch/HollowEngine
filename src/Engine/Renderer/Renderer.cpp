@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include "Graphics/Shader.hpp"
+#include "Renderer/Framebuffer.hpp"
 #include "Renderer/Frustum.hpp"
 #include "Renderer/Camera.hpp"
 #include "ECS/Registry.hpp"
@@ -80,10 +81,12 @@ void UploadInstanceData(std::size_t byteSize, const glm::mat4* models, std::size
 }
 
 std::unique_ptr<Shader> Renderer::s_Shader;
+std::unique_ptr<Framebuffer> Renderer::s_Framebuffer;
 static unsigned int s_InstanceVBO = 0;
 static std::size_t s_InstanceBufferCapacity = 0;
 static Frustum s_Frustum;
 static std::vector<InstanceBatch> s_InstanceBatches;
+static glm::vec4 s_ClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
 void Renderer::Init()
 {
@@ -94,6 +97,7 @@ void Renderer::Init()
         "assets/shaders/basic.frag"
     );
 
+    s_Framebuffer = std::make_unique<Framebuffer>(1, 1);
     glGenBuffers(1, &s_InstanceVBO);
 }
 
@@ -110,17 +114,38 @@ void Renderer::Shutdown()
         s_Shader->Destroy();
 
     s_InstanceBatches.clear();
+    s_Framebuffer.reset();
     s_Shader.reset();
 }
 
 void Renderer::Clear(float r, float g, float b)
 {
-    glClearColor(r, g, b, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    s_ClearColor = glm::vec4(r, g, b, 1.0f);
+}
+
+void Renderer::Resize(uint32_t width, uint32_t height)
+{
+    if (!s_Framebuffer || width == 0 || height == 0)
+        return;
+
+    s_Framebuffer->Resize(width, height);
 }
 
 void Renderer::Draw(Registry& registry, float width, float height)
 {
+    if (width <= 0.0f || height <= 0.0f || !s_Framebuffer)
+        return;
+
+    const auto framebufferWidth = static_cast<uint32_t>(width);
+    const auto framebufferHeight = static_cast<uint32_t>(height);
+
+    Resize(framebufferWidth, framebufferHeight);
+    s_Framebuffer->Bind();
+    glViewport(0, 0, static_cast<GLsizei>(framebufferWidth), static_cast<GLsizei>(framebufferHeight));
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
     Camera* activeCamera = nullptr;
 
     for (auto& [entity, cam] : registry.GetCameras())
@@ -133,7 +158,10 @@ void Renderer::Draw(Registry& registry, float width, float height)
     }
 
     if (!activeCamera)
+    {
+        s_Framebuffer->Unbind();
         return;
+    }
 
     if (height > 0.0f)
         activeCamera->SetAspect(width / height);
@@ -151,7 +179,10 @@ void Renderer::Draw(Registry& registry, float width, float height)
     auto& aabbs = registry.GetAABBs();
 
     if (meshes.empty())
+    {
+        s_Framebuffer->Unbind();
         return;
+    }
 
     std::size_t activeBatchCount = 0;
 
@@ -194,7 +225,10 @@ void Renderer::Draw(Registry& registry, float width, float height)
     }
 
     if (activeBatchCount == 0)
+    {
+        s_Framebuffer->Unbind();
         return;
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, s_InstanceVBO);
     s_Shader->SetMat4("u_ViewProjection", glm::value_ptr(vp));
@@ -221,6 +255,16 @@ void Renderer::Draw(Registry& registry, float width, float height)
             static_cast<GLsizei>(batch.Models.size())
         );
     }
+
+    s_Framebuffer->Unbind();
+}
+
+uint32_t Renderer::GetFinalImage()
+{
+    if (!s_Framebuffer)
+        return 0;
+
+    return s_Framebuffer->GetColorAttachmentID();
 }
 
 }
