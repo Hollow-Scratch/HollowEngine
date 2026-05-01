@@ -49,7 +49,7 @@ void GLFWWindow::Init(const WindowProps& props) {
         std::cerr << "[GLFW] Failed to make OpenGL context current\n";
         std::abort();
     }
-
+    
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "[GLAD] Failed to initialize\n";
         std::abort();

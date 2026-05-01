@@ -2,6 +2,7 @@
 #include "Window.hpp"
 #include "Time.hpp"
 #include "Input.hpp"
+#include "Renderer/Renderer.hpp"
 #include <iostream>
 
 namespace Hollow
@@ -20,6 +21,7 @@ void Application::Run()
 {
     m_Window = Window::Create();
 
+    Renderer::Init();
     OnInit();
 
     Hollow::Time time;
@@ -36,6 +38,9 @@ void Application::Run()
         Input::Update();
 
         OnUpdate(DeltaTime);
+        Renderer::Clear(0.1f, 0.1f, 0.2f);
+
+        Renderer::Draw();
 
         m_Window->OnUpdate();
 
