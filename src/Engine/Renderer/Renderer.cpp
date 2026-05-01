@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <cstddef>
 #include <vector>
 
 namespace Hollow {
@@ -25,25 +24,27 @@ struct InstanceBatch
 
 bool IsSameBatch(const InstanceBatch& batch, const MeshComponent& mesh)
 {
-    return batch.Mesh != nullptr &&
+    return batch.Mesh &&
            batch.Mesh->VAO.get() == mesh.VAO.get() &&
            batch.Mesh->EBO.get() == mesh.EBO.get() &&
            batch.Mesh->TextureData.get() == mesh.TextureData.get() &&
            batch.Mesh->IndexCount == mesh.IndexCount;
 }
 
-InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches, const MeshComponent& mesh, std::size_t& activeBatchCount)
+InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches,
+                                const MeshComponent& mesh,
+                                size_t& activeCount)
 {
-    for (std::size_t i = 0; i < activeBatchCount; ++i)
+    for (size_t i = 0; i < activeCount; i++)
     {
         if (IsSameBatch(batches[i], mesh))
             return batches[i];
     }
 
-    if (activeBatchCount == batches.size())
+    if (activeCount == batches.size())
         batches.emplace_back();
 
-    InstanceBatch& batch = batches[activeBatchCount++];
+    InstanceBatch& batch = batches[activeCount++];
     batch.Mesh = &mesh;
     batch.Models.clear();
     return batch;
@@ -51,7 +52,7 @@ InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches, const MeshC
 
 void SetupInstanceAttributes()
 {
-    for (unsigned int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; i++)
     {
         glEnableVertexAttribArray(3 + i);
         glVertexAttribPointer(
@@ -60,32 +61,34 @@ void SetupInstanceAttributes()
             GL_FLOAT,
             GL_FALSE,
             sizeof(glm::mat4),
-            reinterpret_cast<void*>(sizeof(float) * 4 * i)
+            (void*)(sizeof(float) * 4 * i)
         );
         glVertexAttribDivisor(3 + i, 1);
     }
 }
 
-void UploadInstanceData(std::size_t byteSize, const glm::mat4* models, std::size_t& capacity)
+void UploadInstanceData(size_t size, const glm::mat4* data, size_t& capacity)
 {
-    if (byteSize > capacity)
+    if (size > capacity)
     {
-        glBufferData(GL_ARRAY_BUFFER, byteSize, models, GL_DYNAMIC_DRAW);
-        capacity = byteSize;
-        return;
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+        capacity = size;
     }
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, byteSize, models);
+    else
+    {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+    }
 }
 
 }
 
 std::unique_ptr<Shader> Renderer::s_Shader;
 std::unique_ptr<Framebuffer> Renderer::s_Framebuffer;
+
 static unsigned int s_InstanceVBO = 0;
-static std::size_t s_InstanceBufferCapacity = 0;
+static size_t s_InstanceCapacity = 0;
 static Frustum s_Frustum;
-static std::vector<InstanceBatch> s_InstanceBatches;
+static std::vector<InstanceBatch> s_Batches;
 static glm::vec4 s_ClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
 void Renderer::Init()
@@ -98,6 +101,7 @@ void Renderer::Init()
     );
 
     s_Framebuffer = std::make_unique<Framebuffer>(1, 1);
+
     glGenBuffers(1, &s_InstanceVBO);
 }
 
@@ -107,100 +111,90 @@ void Renderer::Shutdown()
     {
         glDeleteBuffers(1, &s_InstanceVBO);
         s_InstanceVBO = 0;
-        s_InstanceBufferCapacity = 0;
+        s_InstanceCapacity = 0;
     }
 
     if (s_Shader)
         s_Shader->Destroy();
 
-    s_InstanceBatches.clear();
+    s_Batches.clear();
+
     s_Framebuffer.reset();
     s_Shader.reset();
 }
 
 void Renderer::Clear(float r, float g, float b)
 {
-    s_ClearColor = glm::vec4(r, g, b, 1.0f);
+    s_ClearColor = { r, g, b, 1.0f };
 }
 
-void Renderer::Resize(uint32_t width, uint32_t height)
+void Renderer::Resize(uint32_t w, uint32_t h)
 {
-    if (!s_Framebuffer || width == 0 || height == 0)
+    if (!s_Framebuffer || w == 0 || h == 0)
         return;
 
-    s_Framebuffer->Resize(width, height);
+    s_Framebuffer->Resize(w, h);
 }
 
 void Renderer::Draw(Registry& registry, float width, float height)
 {
-    if (width <= 0.0f || height <= 0.0f || !s_Framebuffer)
+    if (width <= 0 || height <= 0)
         return;
 
-    const auto framebufferWidth = static_cast<uint32_t>(width);
-    const auto framebufferHeight = static_cast<uint32_t>(height);
+    uint32_t w = (uint32_t)width;
+    uint32_t h = (uint32_t)height;
 
-    Resize(framebufferWidth, framebufferHeight);
-    s_Framebuffer->Bind();
-    glViewport(0, 0, static_cast<GLsizei>(framebufferWidth), static_cast<GLsizei>(framebufferHeight));
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    if (s_Framebuffer)
+        Resize(w, h);
 
-    Camera* activeCamera = nullptr;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, w, h);
+    glClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (auto& [entity, cam] : registry.GetCameras())
+    Camera* cam = nullptr;
+
+    for (auto& [e, c] : registry.GetCameras())
     {
-        if (cam.Primary)
+        if (c.Primary)
         {
-            activeCamera = &cam.CameraData;
+            cam = &c.CameraData;
             break;
         }
     }
 
-    if (!activeCamera)
-    {
-        s_Framebuffer->Unbind();
+    if (!cam)
         return;
-    }
 
-    if (height > 0.0f)
-        activeCamera->SetAspect(width / height);
+    cam->SetAspect(width / height);
 
     s_Shader->Bind();
     s_Shader->SetInt("u_Texture", 0);
 
-    const glm::mat4 vp =
-        activeCamera->GetProjectionMatrix() *
-        activeCamera->GetViewMatrix();
+    glm::mat4 vp = cam->GetProjectionMatrix() * cam->GetViewMatrix();
     s_Frustum.Update(vp);
 
     auto& meshes = registry.GetMeshes();
     auto& transforms = registry.GetTransforms();
     auto& aabbs = registry.GetAABBs();
 
-    if (meshes.empty())
-    {
-        s_Framebuffer->Unbind();
-        return;
-    }
-
-    std::size_t activeBatchCount = 0;
+    size_t activeBatchCount = 0;
 
     for (auto& [entity, mesh] : meshes)
     {
-        auto transformIt = transforms.find(entity);
-        if (transformIt == transforms.end())
+        auto tIt = transforms.find(entity);
+        if (tIt == transforms.end())
             continue;
 
         if (!mesh.VAO || !mesh.EBO)
             continue;
 
-        auto aabbIt = aabbs.find(entity);
-        if (aabbIt == aabbs.end())
+        auto aIt = aabbs.find(entity);
+        if (aIt == aabbs.end())
             continue;
 
-        auto& transform = transformIt->second;
-        auto& aabb = aabbIt->second;
+        auto& transform = tIt->second;
+        auto& aabb = aIt->second;
 
         aabb.Center = transform.Position;
         aabb.Extents = glm::abs(transform.Scale) * 0.5f;
@@ -211,34 +205,31 @@ void Renderer::Draw(Registry& registry, float width, float height)
         glm::mat4 model(1.0f);
         model = glm::translate(model, transform.Position);
 
-        if (transform.Rotation.x != 0.0f)
+        if (transform.Rotation.x)
             model = glm::rotate(model, glm::radians(transform.Rotation.x), {1,0,0});
-        if (transform.Rotation.y != 0.0f)
+        if (transform.Rotation.y)
             model = glm::rotate(model, glm::radians(transform.Rotation.y), {0,1,0});
-        if (transform.Rotation.z != 0.0f)
+        if (transform.Rotation.z)
             model = glm::rotate(model, glm::radians(transform.Rotation.z), {0,0,1});
 
         model = glm::scale(model, transform.Scale);
 
-        InstanceBatch& batch = GetOrCreateBatch(s_InstanceBatches, mesh, activeBatchCount);
+        InstanceBatch& batch = GetOrCreateBatch(s_Batches, mesh, activeBatchCount);
         batch.Models.push_back(model);
     }
 
     if (activeBatchCount == 0)
-    {
-        s_Framebuffer->Unbind();
         return;
-    }
 
     glBindBuffer(GL_ARRAY_BUFFER, s_InstanceVBO);
     s_Shader->SetMat4("u_ViewProjection", glm::value_ptr(vp));
 
-    for (std::size_t i = 0; i < activeBatchCount; ++i)
+    for (size_t i = 0; i < activeBatchCount; i++)
     {
-        const InstanceBatch& batch = s_InstanceBatches[i];
-        const std::size_t batchByteSize = batch.Models.size() * sizeof(glm::mat4);
+        const InstanceBatch& batch = s_Batches[i];
+        size_t size = batch.Models.size() * sizeof(glm::mat4);
 
-        UploadInstanceData(batchByteSize, batch.Models.data(), s_InstanceBufferCapacity);
+        UploadInstanceData(size, batch.Models.data(), s_InstanceCapacity);
 
         batch.Mesh->VAO->Bind();
         batch.Mesh->EBO->Bind();
@@ -252,11 +243,9 @@ void Renderer::Draw(Registry& registry, float width, float height)
             batch.Mesh->IndexCount,
             GL_UNSIGNED_INT,
             nullptr,
-            static_cast<GLsizei>(batch.Models.size())
+            (GLsizei)batch.Models.size()
         );
     }
-
-    s_Framebuffer->Unbind();
 }
 
 uint32_t Renderer::GetFinalImage()

@@ -2,6 +2,7 @@
 #include "Window.hpp"
 #include "Input.hpp"
 #include "Renderer/Renderer.hpp"
+#include "Renderer/Framebuffer.hpp"
 #include <iostream>
 
 namespace Hollow
@@ -57,6 +58,7 @@ void Application::Run()
 
     if (m_Window)
     {
+        Framebuffer::MarkContextDestroyed();
         m_Window->Shutdown();
         m_Window.reset();
     }

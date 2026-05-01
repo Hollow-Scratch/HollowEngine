@@ -1,7 +1,6 @@
 #include "Framebuffer.hpp"
 
 #include <glad/glad.h>
-
 #include <cstdlib>
 #include <iostream>
 
@@ -10,7 +9,13 @@ namespace Hollow {
 namespace {
 
 thread_local GLint s_PreviousFramebuffer = 0;
+static bool s_OpenGLAlive = true;
 
+}
+
+void Framebuffer::MarkContextDestroyed()
+{
+    s_OpenGLAlive = false;
 }
 
 Framebuffer::Framebuffer(uint32_t width, uint32_t height)
@@ -21,6 +26,9 @@ Framebuffer::Framebuffer(uint32_t width, uint32_t height)
 
 Framebuffer::~Framebuffer()
 {
+    if (!s_OpenGLAlive)
+        return;
+
     Release();
 }
 
@@ -114,6 +122,9 @@ void Framebuffer::Invalidate()
 
 void Framebuffer::Release()
 {
+    if (!s_OpenGLAlive)
+        return;
+
     if (m_DepthAttachment != 0)
     {
         glDeleteRenderbuffers(1, &m_DepthAttachment);
