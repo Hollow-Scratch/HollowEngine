@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "Core/Time.hpp"
 
 namespace Hollow {
 
@@ -16,6 +17,7 @@ public:
     static Application& Get() { return *s_Instance; }
 
     Window& GetWindow() { return *m_Window; }
+    Time& GetTime() { return m_Time; }
 
 protected:
     virtual void OnInit() {}
@@ -28,6 +30,8 @@ protected:
 
 private:
     static Application* s_Instance;
+
+    Time m_Time;
 };
 
 }

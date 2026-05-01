@@ -1,6 +1,5 @@
 #include "Application.hpp"
 #include "Window.hpp"
-#include "Time.hpp"
 #include "Input.hpp"
 #include "Renderer/Renderer.hpp"
 #include <iostream>
@@ -24,24 +23,19 @@ void Application::Run()
     Renderer::Init();
     OnInit();
 
-    Hollow::Time time;
-
     float timer = 0.0f;
     int frames = 0;
 
     while (m_Window && !m_Window->ShouldClose())
     {
-        time.beginFrame();
+        m_Time.beginFrame();
 
-        float DeltaTime = time.getScaledDeltaTime();
+        float DeltaTime = m_Time.getScaledDeltaTime();
 
         Input::Update();
 
         Renderer::Clear(0.1f, 0.1f, 0.2f);
         OnUpdate(DeltaTime);
-        
-
-        
 
         m_Window->OnUpdate();
 
@@ -57,7 +51,7 @@ void Application::Run()
             frames = 0;
         }
 
-        time.endFrame();
+        m_Time.endFrame();
     }
 
     if (m_Window)

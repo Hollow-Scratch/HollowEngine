@@ -1,6 +1,10 @@
 #include "Raycaster.h"
 #include "ECS/Registry.hpp"
 #include "Core/Window.hpp"
+#include "Graphics/VertexArray.hpp"
+#include "Graphics/VertexBuffer.hpp"
+#include "Graphics/IndexBuffer.hpp"
+#include "Graphics/BufferLayout.hpp"
 
 #include <iostream>
 
@@ -19,19 +23,59 @@ protected:
     void OnInit() override {
         std::cout << "[Sandbox] Init\n";
 
+        float vertices[] = {
+            -0.5f,-0.5f,-0.5f,
+             0.5f,-0.5f,-0.5f,
+             0.5f, 0.5f,-0.5f,
+            -0.5f, 0.5f,-0.5f,
+
+            -0.5f,-0.5f, 0.5f,
+             0.5f,-0.5f, 0.5f,
+             0.5f, 0.5f, 0.5f,
+            -0.5f, 0.5f, 0.5f
+        };
+
+        unsigned int indices[] = {
+            0,1,2, 2,3,0,
+            4,5,6, 6,7,4,
+            0,4,7, 7,3,0,
+            1,5,6, 6,2,1,
+            0,1,5, 5,4,0,
+            3,2,6, 6,7,3
+        };
+
         auto e1 = m_Registry.CreateEntity();
         auto& t1 = m_Registry.AddTransform(e1);
         t1.Position = {-0.5f, 0.0f, -1.0f};
         t1.Scale = {1.0f, 1.0f, 1.0f};
         t1.Rotation = {0.0f, 0.0f, 0.0f};
-        m_Registry.AddMesh(e1);
+
+        auto& mesh1 = m_Registry.AddMesh(e1);
+        mesh1.VAO = std::make_unique<VertexArray>();
+        mesh1.VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
+        mesh1.EBO = std::make_unique<IndexBuffer>(indices, 36);
+
+        BufferLayout layout;
+        layout.PushFloat(3);
+
+        mesh1.VAO->AddBuffer(*mesh1.VBO, layout);
+        mesh1.EBO->Bind();
+        mesh1.IndexCount = 36;
 
         auto e2 = m_Registry.CreateEntity();
         auto& t2 = m_Registry.AddTransform(e2);
         t2.Position = {0.5f, 0.0f, -2.0f};
         t2.Scale = {1.0f, 1.0f, 1.0f};
         t2.Rotation = {0.0f, 0.0f, 0.0f};
-        m_Registry.AddMesh(e2);
+
+        auto& mesh2 = m_Registry.AddMesh(e2);
+        mesh2.VAO = std::make_unique<VertexArray>();
+        mesh2.VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
+        mesh2.EBO = std::make_unique<IndexBuffer>(indices, 36);
+
+        mesh2.VAO->AddBuffer(*mesh2.VBO, layout);
+        mesh2.EBO->Bind();
+        mesh2.IndexCount = 36;
 
         m_CameraEntity = m_Registry.CreateEntity();
 

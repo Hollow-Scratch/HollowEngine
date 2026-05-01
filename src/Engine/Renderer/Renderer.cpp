@@ -1,11 +1,8 @@
 #include "Renderer.hpp"
 #include "Graphics/Shader.hpp"
-#include "Graphics/VertexArray.hpp"
-#include "Graphics/VertexBuffer.hpp"
-#include "Graphics/IndexBuffer.hpp"
-#include "Graphics/BufferLayout.hpp"
 #include "Renderer/Camera.hpp"
 #include "ECS/Registry.hpp"
+#include "Core/Application.hpp"
 
 #include <glad/glad.h>
 
@@ -15,9 +12,6 @@
 
 namespace Hollow {
 
-std::unique_ptr<VertexArray> Renderer::s_VAO;
-std::unique_ptr<VertexBuffer> Renderer::s_VBO;
-std::unique_ptr<IndexBuffer> Renderer::s_EBO;
 std::unique_ptr<Shader> Renderer::s_Shader;
 
 void Renderer::Init()
@@ -28,37 +22,6 @@ void Renderer::Init()
         "assets/shaders/basic.vert",
         "assets/shaders/basic.frag"
     );
-
-    float vertices[] = {
-        -0.5f,-0.5f,-0.5f,
-         0.5f,-0.5f,-0.5f,
-         0.5f, 0.5f,-0.5f,
-        -0.5f, 0.5f,-0.5f,
-
-        -0.5f,-0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f,
-         0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f
-    };
-
-    unsigned int indices[] = {
-        0,1,2, 2,3,0,
-        4,5,6, 6,7,4,
-        0,4,7, 7,3,0,
-        1,5,6, 6,2,1,
-        0,1,5, 5,4,0,
-        3,2,6, 6,7,3
-    };
-
-    s_VAO = std::make_unique<VertexArray>();
-    s_VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
-    s_EBO = std::make_unique<IndexBuffer>(indices, 36);
-
-    BufferLayout layout;
-    layout.PushFloat(3);
-
-    s_VAO->AddBuffer(*s_VBO, layout);
-    s_EBO->Bind();
 }
 
 void Renderer::Shutdown()
@@ -66,19 +29,7 @@ void Renderer::Shutdown()
     if (s_Shader)
         s_Shader->Destroy();
 
-    if (s_VAO)
-        s_VAO->Destroy();
-
-    if (s_VBO)
-        s_VBO->Destroy();
-
-    if (s_EBO)
-        s_EBO->Destroy();
-
     s_Shader.reset();
-    s_VAO.reset();
-    s_VBO.reset();
-    s_EBO.reset();
 }
 
 void Renderer::Clear(float r, float g, float b)
@@ -108,12 +59,23 @@ void Renderer::Draw(Registry& registry, float width, float height)
     glm::mat4 projection = activeCamera->GetProjectionMatrix();
     glm::mat4 view       = activeCamera->GetViewMatrix();
 
-    s_VAO->Bind();
+    float time = Application::Get().GetTime().getElapsedTime();
+    s_Shader->SetFloat("u_Time", time);
 
     for (auto& [entity, transform] : registry.GetTransforms())
     {
-        if (registry.GetMeshes().find(entity) == registry.GetMeshes().end())
+        auto& meshes = registry.GetMeshes();
+
+        if (meshes.find(entity) == meshes.end())
             continue;
+
+        auto& mesh = meshes.at(entity);
+
+        if (!mesh.VAO || !mesh.EBO)
+            continue;
+
+        mesh.VAO->Bind();
+        mesh.EBO->Bind();
 
         glm::mat4 model = glm::mat4(1.0f);
 
@@ -126,9 +88,8 @@ void Renderer::Draw(Registry& registry, float width, float height)
         glm::mat4 mvp = projection * view * model;
 
         s_Shader->SetMat4("u_MVP", glm::value_ptr(mvp));
-        s_Shader->SetVec3("u_Color", 0.2f, 0.8f, 1.0f);
 
-        glDrawElements(GL_TRIANGLES, s_EBO->GetCount(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, mesh.IndexCount, GL_UNSIGNED_INT, nullptr);
     }
 }
 
