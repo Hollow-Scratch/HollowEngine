@@ -19,6 +19,7 @@ public:
         m_Transforms.erase(entity);
         m_Meshes.erase(entity);
         m_Cameras.erase(entity);
+        m_AABBs.erase(entity);
     }
 
     TransformComponent& AddTransform(Entity entity)
@@ -36,6 +37,11 @@ public:
         return m_Cameras.emplace(entity, CameraComponent(fov, aspect, nearClip, farClip)).first->second;
     }
 
+    AABBComponent& AddAABB(Entity entity)
+    {
+        return m_AABBs[entity];
+    }
+
     std::unordered_map<Entity, TransformComponent>& GetTransforms()
     {
         return m_Transforms;
@@ -51,12 +57,18 @@ public:
         return m_Cameras;
     }
 
+    std::unordered_map<Entity, AABBComponent>& GetAABBs()
+    {
+        return m_AABBs;
+    }
+
 private:
     Entity m_NextEntity = 1;
 
     std::unordered_map<Entity, TransformComponent> m_Transforms;
     std::unordered_map<Entity, MeshComponent> m_Meshes;
     std::unordered_map<Entity, CameraComponent> m_Cameras;
+    std::unordered_map<Entity, AABBComponent> m_AABBs;
 };
 
 }

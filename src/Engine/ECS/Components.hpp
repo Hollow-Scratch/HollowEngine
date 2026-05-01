@@ -5,10 +5,16 @@
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/IndexBuffer.hpp"
 #include "Graphics/Texture.hpp"
-#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
 #include <memory>
 
 namespace Hollow {
+
+struct AABBComponent
+{
+    glm::vec3 Center{0.0f};
+    glm::vec3 Extents{0.5f};
+};
 
 struct TransformComponent
 {

@@ -19,6 +19,7 @@ Application::~Application() noexcept = default;
 void Application::Run()
 {
     m_Window = Window::Create();
+    m_Window->SetVSync(false);
 
     Renderer::Init();
     OnInit();

@@ -17,23 +17,30 @@ set(CMAKE_BUILD_TYPE ${BUILD_MODE} CACHE STRING "" FORCE)
 
 option(HEAVY_RELEASE "Enable aggressive optimization flags" OFF)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O1 -g -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_DEBUG   "-O1 -g -fno-omit-frame-pointer")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE ${BUILD_MODE} CACHE STRING "" FORCE)
+endif()
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-set(CMAKE_C_FLAGS_RELEASE   "-O3 -DNDEBUG")
+# Debug
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -g -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O1 -g -fno-omit-frame-pointer")
 
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
+# Release
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE} -O3 -DNDEBUG")
 
+# RelWithDebInfo
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -g")
+
+# Heavy Release
 if(HEAVY_RELEASE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Heavy Release Enabled")
 
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -flto")
-    set(CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE} -march=native -flto")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+    set(CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE} -march=native")
 
-    # optional
-    # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
 add_subdirectory(src/Engine)

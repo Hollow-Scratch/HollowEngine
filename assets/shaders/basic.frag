@@ -1,12 +1,17 @@
 #version 330 core
 
-out vec4 FragColor;
+in vec2 v_UV;
 
-in vec2 vUV;
+out vec4 FragColor;
 
 uniform sampler2D u_Texture;
 
 void main()
 {
-    FragColor = texture(u_Texture, vUV);
+    vec4 texColor = texture(u_Texture, v_UV);
+
+    if (texColor.a < 0.1)
+        discard;
+
+    FragColor = texColor;
 }

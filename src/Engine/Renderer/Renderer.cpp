@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include "Graphics/Shader.hpp"
+#include "Renderer/Frustum.hpp"
 #include "Renderer/Camera.hpp"
 #include "ECS/Registry.hpp"
 
@@ -8,10 +9,81 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <cstddef>
+#include <vector>
 
 namespace Hollow {
 
+namespace {
+
+struct InstanceBatch
+{
+    const MeshComponent* Mesh = nullptr;
+    std::vector<glm::mat4> Models;
+};
+
+bool IsSameBatch(const InstanceBatch& batch, const MeshComponent& mesh)
+{
+    return batch.Mesh != nullptr &&
+           batch.Mesh->VAO.get() == mesh.VAO.get() &&
+           batch.Mesh->EBO.get() == mesh.EBO.get() &&
+           batch.Mesh->TextureData.get() == mesh.TextureData.get() &&
+           batch.Mesh->IndexCount == mesh.IndexCount;
+}
+
+InstanceBatch& GetOrCreateBatch(std::vector<InstanceBatch>& batches, const MeshComponent& mesh, std::size_t& activeBatchCount)
+{
+    for (std::size_t i = 0; i < activeBatchCount; ++i)
+    {
+        if (IsSameBatch(batches[i], mesh))
+            return batches[i];
+    }
+
+    if (activeBatchCount == batches.size())
+        batches.emplace_back();
+
+    InstanceBatch& batch = batches[activeBatchCount++];
+    batch.Mesh = &mesh;
+    batch.Models.clear();
+    return batch;
+}
+
+void SetupInstanceAttributes()
+{
+    for (unsigned int i = 0; i < 4; ++i)
+    {
+        glEnableVertexAttribArray(3 + i);
+        glVertexAttribPointer(
+            3 + i,
+            4,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(glm::mat4),
+            reinterpret_cast<void*>(sizeof(float) * 4 * i)
+        );
+        glVertexAttribDivisor(3 + i, 1);
+    }
+}
+
+void UploadInstanceData(std::size_t byteSize, const glm::mat4* models, std::size_t& capacity)
+{
+    if (byteSize > capacity)
+    {
+        glBufferData(GL_ARRAY_BUFFER, byteSize, models, GL_DYNAMIC_DRAW);
+        capacity = byteSize;
+        return;
+    }
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, byteSize, models);
+}
+
+}
+
 std::unique_ptr<Shader> Renderer::s_Shader;
+static unsigned int s_InstanceVBO = 0;
+static std::size_t s_InstanceBufferCapacity = 0;
+static Frustum s_Frustum;
+static std::vector<InstanceBatch> s_InstanceBatches;
 
 void Renderer::Init()
 {
@@ -21,13 +93,23 @@ void Renderer::Init()
         "assets/shaders/basic.vert",
         "assets/shaders/basic.frag"
     );
+
+    glGenBuffers(1, &s_InstanceVBO);
 }
 
 void Renderer::Shutdown()
 {
+    if (s_InstanceVBO)
+    {
+        glDeleteBuffers(1, &s_InstanceVBO);
+        s_InstanceVBO = 0;
+        s_InstanceBufferCapacity = 0;
+    }
+
     if (s_Shader)
         s_Shader->Destroy();
 
+    s_InstanceBatches.clear();
     s_Shader.reset();
 }
 
@@ -53,45 +135,91 @@ void Renderer::Draw(Registry& registry, float width, float height)
     if (!activeCamera)
         return;
 
+    if (height > 0.0f)
+        activeCamera->SetAspect(width / height);
+
     s_Shader->Bind();
+    s_Shader->SetInt("u_Texture", 0);
 
-    glm::mat4 projection = activeCamera->GetProjectionMatrix();
-    glm::mat4 view       = activeCamera->GetViewMatrix();
+    const glm::mat4 vp =
+        activeCamera->GetProjectionMatrix() *
+        activeCamera->GetViewMatrix();
+    s_Frustum.Update(vp);
 
-    for (auto& [entity, transform] : registry.GetTransforms())
+    auto& meshes = registry.GetMeshes();
+    auto& transforms = registry.GetTransforms();
+    auto& aabbs = registry.GetAABBs();
+
+    if (meshes.empty())
+        return;
+
+    std::size_t activeBatchCount = 0;
+
+    for (auto& [entity, mesh] : meshes)
     {
-        auto& meshes = registry.GetMeshes();
-
-        if (meshes.find(entity) == meshes.end())
+        auto transformIt = transforms.find(entity);
+        if (transformIt == transforms.end())
             continue;
-
-        auto& mesh = meshes.at(entity);
 
         if (!mesh.VAO || !mesh.EBO)
             continue;
 
-        mesh.VAO->Bind();
-        mesh.EBO->Bind();
+        auto aabbIt = aabbs.find(entity);
+        if (aabbIt == aabbs.end())
+            continue;
 
-        if (mesh.TextureData)
-        {
-            mesh.TextureData->Bind(0);
-            s_Shader->SetInt("u_Texture", 0);
-        }
+        auto& transform = transformIt->second;
+        auto& aabb = aabbIt->second;
 
-        glm::mat4 model = glm::mat4(1.0f);
+        aabb.Center = transform.Position;
+        aabb.Extents = glm::abs(transform.Scale) * 0.5f;
 
+        if (!s_Frustum.Intersects(aabb))
+            continue;
+
+        glm::mat4 model(1.0f);
         model = glm::translate(model, transform.Position);
-        model = glm::rotate(model, glm::radians(transform.Rotation.x), {1,0,0});
-        model = glm::rotate(model, glm::radians(transform.Rotation.y), {0,1,0});
-        model = glm::rotate(model, glm::radians(transform.Rotation.z), {0,0,1});
+
+        if (transform.Rotation.x != 0.0f)
+            model = glm::rotate(model, glm::radians(transform.Rotation.x), {1,0,0});
+        if (transform.Rotation.y != 0.0f)
+            model = glm::rotate(model, glm::radians(transform.Rotation.y), {0,1,0});
+        if (transform.Rotation.z != 0.0f)
+            model = glm::rotate(model, glm::radians(transform.Rotation.z), {0,0,1});
+
         model = glm::scale(model, transform.Scale);
 
-        glm::mat4 mvp = projection * view * model;
+        InstanceBatch& batch = GetOrCreateBatch(s_InstanceBatches, mesh, activeBatchCount);
+        batch.Models.push_back(model);
+    }
 
-        s_Shader->SetMat4("u_MVP", glm::value_ptr(mvp));
+    if (activeBatchCount == 0)
+        return;
 
-        glDrawElements(GL_TRIANGLES, mesh.IndexCount, GL_UNSIGNED_INT, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, s_InstanceVBO);
+    s_Shader->SetMat4("u_ViewProjection", glm::value_ptr(vp));
+
+    for (std::size_t i = 0; i < activeBatchCount; ++i)
+    {
+        const InstanceBatch& batch = s_InstanceBatches[i];
+        const std::size_t batchByteSize = batch.Models.size() * sizeof(glm::mat4);
+
+        UploadInstanceData(batchByteSize, batch.Models.data(), s_InstanceBufferCapacity);
+
+        batch.Mesh->VAO->Bind();
+        batch.Mesh->EBO->Bind();
+        SetupInstanceAttributes();
+
+        if (batch.Mesh->TextureData)
+            batch.Mesh->TextureData->Bind(0);
+
+        glDrawElementsInstanced(
+            GL_TRIANGLES,
+            batch.Mesh->IndexCount,
+            GL_UNSIGNED_INT,
+            nullptr,
+            static_cast<GLsizei>(batch.Models.size())
+        );
     }
 }
 

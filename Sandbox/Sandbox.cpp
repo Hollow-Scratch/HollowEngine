@@ -24,7 +24,6 @@ protected:
         std::cout << "[Sandbox] Init\n";
 
         float vertices[] = {
-            // positions          // UVs
             -0.5f,-0.5f, 0.5f,  0.0f,0.0f,
              0.5f,-0.5f, 0.5f,  1.0f,0.0f,
              0.5f, 0.5f, 0.5f,  1.0f,1.0f,
@@ -77,7 +76,7 @@ protected:
         sharedVAO->AddBuffer(*sharedVBO, layout);
         sharedEBO->Bind();
 
-        int count = 30;
+        int count = 32;
 
         for (int x = 0; x < count; x++)
         for (int y = 0; y < count; y++)
@@ -91,6 +90,7 @@ protected:
                 (y - count / 2) * 2.0f,
                 (z - count / 2) * 2.0f
             };
+            m_Registry.AddAABB(e);
 
             auto& mesh = m_Registry.AddMesh(e);
             mesh.VAO = sharedVAO;
