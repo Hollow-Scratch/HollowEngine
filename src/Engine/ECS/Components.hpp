@@ -4,6 +4,7 @@
 #include "Graphics/VertexArray.hpp"
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/IndexBuffer.hpp"
+#include "Graphics/Texture.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -18,9 +19,11 @@ struct TransformComponent
 
 struct MeshComponent
 {
-    std::unique_ptr<VertexArray> VAO;
-    std::unique_ptr<VertexBuffer> VBO;
-    std::unique_ptr<IndexBuffer> EBO;
+    std::shared_ptr<VertexArray> VAO;
+    std::shared_ptr<VertexBuffer> VBO;
+    std::shared_ptr<IndexBuffer> EBO;
+
+    std::shared_ptr<Texture> TextureData;
 
     unsigned int IndexCount = 0;
 };

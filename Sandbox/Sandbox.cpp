@@ -5,6 +5,7 @@
 #include "Graphics/VertexBuffer.hpp"
 #include "Graphics/IndexBuffer.hpp"
 #include "Graphics/BufferLayout.hpp"
+#include "Graphics/Texture.hpp"
 
 #include <iostream>
 
@@ -13,7 +14,6 @@ namespace Hollow {
 class SandboxApp : public Application {
 private:
     Registry m_Registry;
-
     Entity m_CameraEntity;
 
     float m_Yaw   = -90.0f;
@@ -24,70 +24,93 @@ protected:
         std::cout << "[Sandbox] Init\n";
 
         float vertices[] = {
-            -0.5f,-0.5f,-0.5f,
-             0.5f,-0.5f,-0.5f,
-             0.5f, 0.5f,-0.5f,
-            -0.5f, 0.5f,-0.5f,
+            // positions          // UVs
+            -0.5f,-0.5f, 0.5f,  0.0f,0.0f,
+             0.5f,-0.5f, 0.5f,  1.0f,0.0f,
+             0.5f, 0.5f, 0.5f,  1.0f,1.0f,
+            -0.5f, 0.5f, 0.5f,  0.0f,1.0f,
 
-            -0.5f,-0.5f, 0.5f,
-             0.5f,-0.5f, 0.5f,
-             0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f
+             0.5f,-0.5f,-0.5f,  0.0f,0.0f,
+            -0.5f,-0.5f,-0.5f,  1.0f,0.0f,
+            -0.5f, 0.5f,-0.5f,  1.0f,1.0f,
+             0.5f, 0.5f,-0.5f,  0.0f,1.0f,
+
+            -0.5f,-0.5f,-0.5f,  0.0f,0.0f,
+            -0.5f,-0.5f, 0.5f,  1.0f,0.0f,
+            -0.5f, 0.5f, 0.5f,  1.0f,1.0f,
+            -0.5f, 0.5f,-0.5f,  0.0f,1.0f,
+
+             0.5f,-0.5f, 0.5f,  0.0f,0.0f,
+             0.5f,-0.5f,-0.5f,  1.0f,0.0f,
+             0.5f, 0.5f,-0.5f,  1.0f,1.0f,
+             0.5f, 0.5f, 0.5f,  0.0f,1.0f,
+
+            -0.5f, 0.5f, 0.5f,  0.0f,0.0f,
+             0.5f, 0.5f, 0.5f,  1.0f,0.0f,
+             0.5f, 0.5f,-0.5f,  1.0f,1.0f,
+            -0.5f, 0.5f,-0.5f,  0.0f,1.0f,
+
+            -0.5f,-0.5f,-0.5f,  0.0f,0.0f,
+             0.5f,-0.5f,-0.5f,  1.0f,0.0f,
+             0.5f,-0.5f, 0.5f,  1.0f,1.0f,
+            -0.5f,-0.5f, 0.5f,  0.0f,1.0f
         };
 
         unsigned int indices[] = {
             0,1,2, 2,3,0,
             4,5,6, 6,7,4,
-            0,4,7, 7,3,0,
-            1,5,6, 6,2,1,
-            0,1,5, 5,4,0,
-            3,2,6, 6,7,3
+            8,9,10, 10,11,8,
+            12,13,14, 14,15,12,
+            16,17,18, 18,19,16,
+            20,21,22, 22,23,20
         };
-
-        auto e1 = m_Registry.CreateEntity();
-        auto& t1 = m_Registry.AddTransform(e1);
-        t1.Position = {-0.5f, 0.0f, -1.0f};
-        t1.Scale = {1.0f, 1.0f, 1.0f};
-        t1.Rotation = {0.0f, 0.0f, 0.0f};
-
-        auto& mesh1 = m_Registry.AddMesh(e1);
-        mesh1.VAO = std::make_unique<VertexArray>();
-        mesh1.VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
-        mesh1.EBO = std::make_unique<IndexBuffer>(indices, 36);
 
         BufferLayout layout;
         layout.PushFloat(3);
+        layout.PushFloat(2);
 
-        mesh1.VAO->AddBuffer(*mesh1.VBO, layout);
-        mesh1.EBO->Bind();
-        mesh1.IndexCount = 36;
+        auto sharedVAO = std::make_shared<VertexArray>();
+        auto sharedVBO = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
+        auto sharedEBO = std::make_shared<IndexBuffer>(indices, 36);
+        auto sharedTexture = std::make_shared<Texture>("assets/textures/crate.png");
 
-        auto e2 = m_Registry.CreateEntity();
-        auto& t2 = m_Registry.AddTransform(e2);
-        t2.Position = {0.5f, 0.0f, -2.0f};
-        t2.Scale = {1.0f, 1.0f, 1.0f};
-        t2.Rotation = {0.0f, 0.0f, 0.0f};
+        sharedVAO->AddBuffer(*sharedVBO, layout);
+        sharedEBO->Bind();
 
-        auto& mesh2 = m_Registry.AddMesh(e2);
-        mesh2.VAO = std::make_unique<VertexArray>();
-        mesh2.VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
-        mesh2.EBO = std::make_unique<IndexBuffer>(indices, 36);
+        int count = 30;
 
-        mesh2.VAO->AddBuffer(*mesh2.VBO, layout);
-        mesh2.EBO->Bind();
-        mesh2.IndexCount = 36;
+        for (int x = 0; x < count; x++)
+        for (int y = 0; y < count; y++)
+        for (int z = 0; z < count; z++)
+        {
+            Entity e = m_Registry.CreateEntity();
+
+            auto& t = m_Registry.AddTransform(e);
+            t.Position = {
+                (x - count / 2) * 2.0f,
+                (y - count / 2) * 2.0f,
+                (z - count / 2) * 2.0f
+            };
+
+            auto& mesh = m_Registry.AddMesh(e);
+            mesh.VAO = sharedVAO;
+            mesh.VBO = sharedVBO;
+            mesh.EBO = sharedEBO;
+            mesh.TextureData = sharedTexture;
+            mesh.IndexCount = 36;
+        }
 
         m_CameraEntity = m_Registry.CreateEntity();
 
         auto& cam = m_Registry.AddCamera(m_CameraEntity, 45.0f, 1.0f, 0.1f, 100.0f);
-        cam.CameraData.SetPosition({0.0f, 0.0f, 3.0f});
+        cam.CameraData.SetPosition({0.0f, 0.0f, 10.0f});
 
         m_Registry.AddTransform(m_CameraEntity);
     }
 
     void OnUpdate(float dt) override
     {
-        float speed = 3.0f;
+        float speed = 5.0f;
 
         auto& camComp = m_Registry.GetCameras().at(m_CameraEntity);
         auto& camera  = camComp.CameraData;
@@ -102,17 +125,10 @@ protected:
 
         glm::vec3 pos = camera.GetPosition();
 
-        if (Input::IsKeyPressed(Key_W))
-            pos += front * speed * dt;
-
-        if (Input::IsKeyPressed(Key_S))
-            pos -= front * speed * dt;
-
-        if (Input::IsKeyPressed(Key_A))
-            pos -= right * speed * dt;
-
-        if (Input::IsKeyPressed(Key_D))
-            pos += right * speed * dt;
+        if (Input::IsKeyPressed(Key_W)) pos += front * speed * dt;
+        if (Input::IsKeyPressed(Key_S)) pos -= front * speed * dt;
+        if (Input::IsKeyPressed(Key_A)) pos -= right * speed * dt;
+        if (Input::IsKeyPressed(Key_D)) pos += right * speed * dt;
 
         camera.SetPosition(pos);
 
@@ -133,19 +149,14 @@ protected:
             (float)m_Window->GetWidth() / (float)m_Window->GetHeight()
         );
 
-        for (auto& [entity, transform] : m_Registry.GetTransforms())
-        {
-            transform.Rotation.y += 50.0f * dt;
-            transform.Rotation.x += 20.0f * dt;
-        }
-
-        Renderer::Draw(m_Registry,
-                       m_Window->GetWidth(),
-                       m_Window->GetHeight());
+        Renderer::Draw(
+            m_Registry,
+            m_Window->GetWidth(),
+            m_Window->GetHeight()
+        );
     }
 
-    void OnShutdown() override {
-    }
+    void OnShutdown() override {}
 };
 
 Application* CreateApplication()

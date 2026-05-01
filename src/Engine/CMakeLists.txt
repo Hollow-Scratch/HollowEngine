@@ -25,6 +25,7 @@ target_include_directories(glad PUBLIC
 target_include_directories(Engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/external/glad/include
+    ${CMAKE_SOURCE_DIR}/external/stb
 )
 
 # Dependencies

@@ -2,7 +2,6 @@
 #include "Graphics/Shader.hpp"
 #include "Renderer/Camera.hpp"
 #include "ECS/Registry.hpp"
-#include "Core/Application.hpp"
 
 #include <glad/glad.h>
 
@@ -59,9 +58,6 @@ void Renderer::Draw(Registry& registry, float width, float height)
     glm::mat4 projection = activeCamera->GetProjectionMatrix();
     glm::mat4 view       = activeCamera->GetViewMatrix();
 
-    float time = Application::Get().GetTime().getElapsedTime();
-    s_Shader->SetFloat("u_Time", time);
-
     for (auto& [entity, transform] : registry.GetTransforms())
     {
         auto& meshes = registry.GetMeshes();
@@ -76,6 +72,12 @@ void Renderer::Draw(Registry& registry, float width, float height)
 
         mesh.VAO->Bind();
         mesh.EBO->Bind();
+
+        if (mesh.TextureData)
+        {
+            mesh.TextureData->Bind(0);
+            s_Shader->SetInt("u_Texture", 0);
+        }
 
         glm::mat4 model = glm::mat4(1.0f);
 
