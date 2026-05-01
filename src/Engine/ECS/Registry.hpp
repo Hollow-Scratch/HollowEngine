@@ -18,9 +18,9 @@ public:
     {
         m_Transforms.erase(entity);
         m_Meshes.erase(entity);
+        m_Cameras.erase(entity);
     }
 
-    // Add components
     TransformComponent& AddTransform(Entity entity)
     {
         return m_Transforms[entity];
@@ -31,7 +31,11 @@ public:
         return m_Meshes[entity];
     }
 
-    // Access
+    CameraComponent& AddCamera(Entity entity, float fov, float aspect, float nearClip, float farClip)
+    {
+        return m_Cameras.emplace(entity, CameraComponent(fov, aspect, nearClip, farClip)).first->second;
+    }
+
     std::unordered_map<Entity, TransformComponent>& GetTransforms()
     {
         return m_Transforms;
@@ -42,11 +46,17 @@ public:
         return m_Meshes;
     }
 
+    std::unordered_map<Entity, CameraComponent>& GetCameras()
+    {
+        return m_Cameras;
+    }
+
 private:
     Entity m_NextEntity = 1;
 
     std::unordered_map<Entity, TransformComponent> m_Transforms;
     std::unordered_map<Entity, MeshComponent> m_Meshes;
+    std::unordered_map<Entity, CameraComponent> m_Cameras;
 };
 
 }

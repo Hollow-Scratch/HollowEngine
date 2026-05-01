@@ -1,6 +1,8 @@
 #include <glad/glad.h>
 #include "GLFWWindow.hpp"
 #include <GLFW/glfw3.h>
+#include "Core/Input.hpp"
+#include "Core/Keycodes.hpp"
 #include <iostream>
 
 namespace Hollow {
@@ -49,7 +51,7 @@ void GLFWWindow::Init(const WindowProps& props) {
         std::cerr << "[GLFW] Failed to make OpenGL context current\n";
         std::abort();
     }
-    
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "[GLAD] Failed to initialize\n";
         std::abort();
@@ -77,11 +79,36 @@ void GLFWWindow::Init(const WindowProps& props) {
         glViewport(0, 0, width, height);
     });
 
+    // For now
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
     glViewport(0, 0, m_Data.Width, m_Data.Height);
 }
 
 void GLFWWindow::OnUpdate() {
     glfwPollEvents();
+
+    // For now, toggle cursor on Escape
+    static bool pressed = false;
+
+    if (Input::IsKeyPressed(Key_Escape)) {
+        if (!pressed) {
+            pressed = true;
+
+            int mode = glfwGetInputMode(m_Window, GLFW_CURSOR);
+
+            if (mode == GLFW_CURSOR_DISABLED)
+                glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            else
+                glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+    } else {
+        pressed = false;
+    }
+
     glfwSwapBuffers(m_Window);
 }
 

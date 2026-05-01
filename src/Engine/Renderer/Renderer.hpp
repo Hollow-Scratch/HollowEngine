@@ -6,6 +6,7 @@ namespace Hollow {
 
 class VertexArray;
 class VertexBuffer;
+class IndexBuffer;
 class Shader;
 class Registry;
 
@@ -16,11 +17,13 @@ public:
     static void Shutdown();
 
     static void Clear(float r, float g, float b);
+
     static void Draw(Registry& registry, float width, float height);
 
 private:
     static std::unique_ptr<VertexArray> s_VAO;
     static std::unique_ptr<VertexBuffer> s_VBO;
+    static std::unique_ptr<IndexBuffer> s_EBO;
     static std::unique_ptr<Shader> s_Shader;
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Renderer/Camera.hpp"
 #include "glm/glm.hpp"
 
 namespace Hollow {
@@ -15,4 +16,15 @@ namespace Hollow {
     {
         //glm::vec4 Color{ 1.0f }; plans for future use
     };
+
+    struct CameraComponent
+    {
+    Camera CameraData;
+    bool Primary = true;
+
+    CameraComponent(float fov, float aspect, float nearClip, float farClip)
+        : CameraData(fov, aspect, nearClip, farClip) {}
+    };
+
+    
 }
